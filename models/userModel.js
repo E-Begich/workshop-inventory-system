@@ -1,0 +1,40 @@
+module.exports = (sequelize, DataTypes) => {
+
+const User = sequelize.define('User', {
+  ID_user: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
+  Name: {
+    type: DataTypes.STRING(100),
+    allowNull: false,
+  },
+  Lastname: {
+    type: DataTypes.STRING(100),
+    allowNull: false,
+  },
+  Email: {
+    type: DataTypes.STRING(150),
+    allowNull: false,
+    unique: true,
+    validate: {
+      isEmail: true,
+    },
+  },
+  Password: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  Role: {
+    type: DataTypes.ENUM('admin', 'zaposlenik'),
+    allowNull: false,
+    defaultValue: 'zaposlenik',
+  },
+}, {
+  timestamps: false,  // ako ne koristiš createdAt / updatedAt
+});
+
+    return User
+
+}

@@ -1,6 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
 
-  
+
   const ReceiptItems = sequelize.define('ReceiptItems', {
     ID_recItems: {
       type: DataTypes.INTEGER,
@@ -41,9 +41,22 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
     },
+    PriceNoTax: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+    },
+    Tax: {
+      type: DataTypes.DECIMAL(5, 2),
+      allowNull: false,
+    },
+    PriceTax: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+    },
   }, {
     timestamps: false,
   });
 
   return ReceiptItems;
 };
+

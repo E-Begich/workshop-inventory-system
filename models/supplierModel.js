@@ -1,9 +1,15 @@
 module.exports = (sequelize, DataTypes) => {
+
+  
   const Supplier = sequelize.define('Supplier', {
     ID_supplier: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
+    },
+    Name: {
+      type: DataTypes.ENUM('Fizička osoba', 'Tvrtka'),
+      allowNull: false,
     },
     ContactName: {
       type: DataTypes.STRING(100),

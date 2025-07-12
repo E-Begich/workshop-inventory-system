@@ -1,16 +1,11 @@
 module.exports = (sequelize, DataTypes) => {
 
   
-  const Receipt = sequelize.define('Receipt', {
-    ID_receipt: {
+  const Offer = sequelize.define('Offer', {
+    ID_offer: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
-    },
-    ReceiptNumber: {
-      type: DataTypes.STRING(20),
-      allowNull: false,
-      unique: true,
     },
     ID_client: {
       type: DataTypes.INTEGER,
@@ -20,31 +15,24 @@ module.exports = (sequelize, DataTypes) => {
         key: 'ID_client',
       },
       onUpdate: 'CASCADE',
-      onDelete: 'RESTRICT',
+      onDelete: 'CASCADE',
     },
     DateCreate: {
-      type: DataTypes.DATE,
+      type: DataTypes.DATEONLY,
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
-    PriceNoTax: {
-      type: DataTypes.DECIMAL(10, 2),
+    DateEnd: {
+      type: DataTypes.DATEONLY,
       allowNull: false,
+      // Postavit ćeš ovo ručno prilikom unosa – vidi dolje
     },
-    Tax: {
-      type: DataTypes.DECIMAL(5, 2), // npr. 25.00 za 25%
-      allowNull: false,
-    },
-    PriceTax: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
-    },
-    ID_offer: {
+    ID_user: {
       type: DataTypes.INTEGER,
-      allowNull: true,
+      allowNull: false,
       references: {
-        model: 'Offer',
-        key: 'ID_offer',
+        model: 'User',
+        key: 'ID_user',
       },
       onUpdate: 'CASCADE',
       onDelete: 'SET NULL',
@@ -53,5 +41,5 @@ module.exports = (sequelize, DataTypes) => {
     timestamps: false,
   });
 
-  return Receipt;
+  return Offer;
 };

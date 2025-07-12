@@ -1,4 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
+
+  
   const Materials = sequelize.define('Materials', {
     ID_material: {
       type: DataTypes.INTEGER,
@@ -19,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
     Unit: {
-      type: DataTypes.ENUM('metri', 'centimetri'),
+      type: DataTypes.ENUM('Metri', 'Centimetri'),
       allowNull: false,
     },
     Location: {
@@ -43,14 +45,14 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
     TypeChange: {
-      type: DataTypes.ENUM('nabava', 'promocija', 'restlovi'),
+      type: DataTypes.ENUM('Nabava', 'Promocija', 'Restlovi'),
       allowNull: false,
     },
     ID_supplier: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Suppliers',
+        model: 'Supplier',
         key: 'ID_supplier',
       },
       onUpdate: 'CASCADE',

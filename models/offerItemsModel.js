@@ -1,18 +1,18 @@
 module.exports = (sequelize, DataTypes) => {
 
   
-  const ReceiptItems = sequelize.define('ReceiptItems', {
-    ID_recItems: {
+  const OfferItems = sequelize.define('OfferItems', {
+    ID_offerItem: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
     },
-    ID_receipt: {
+    ID_offer: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Receipt',
-        key: 'ID_receipt',
+        model: 'Offer',
+        key: 'ID_offer',
       },
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE',
@@ -28,6 +28,8 @@ module.exports = (sequelize, DataTypes) => {
         model: 'Materials',
         key: 'ID_material',
       },
+      onUpdate: 'CASCADE',
+      onDelete: 'SET NULL',
     },
     ID_service: {
       type: DataTypes.INTEGER,
@@ -36,8 +38,22 @@ module.exports = (sequelize, DataTypes) => {
         model: 'Service',
         key: 'ID_service',
       },
+      onUpdate: 'CASCADE',
+      onDelete: 'SET NULL',
     },
     Amount: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+    },
+    PriceNoTax: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+    },
+    Tax: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+    },
+    PriceTax: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
     },
@@ -45,5 +61,5 @@ module.exports = (sequelize, DataTypes) => {
     timestamps: false,
   });
 
-  return ReceiptItems;
+  return OfferItems;
 };

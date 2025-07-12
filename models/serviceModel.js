@@ -1,4 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
+
+  
   const Service = sequelize.define('Service', {
     ID_service: {
       type: DataTypes.INTEGER,

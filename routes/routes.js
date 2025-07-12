@@ -8,7 +8,9 @@ const router = require('express').Router()
 
 //Table User
 router.post('/addUser', userController.addUser);
-router.post('/getAllUsers', userController.getAllUsers);
-router.post('/getOneUser/:ID_user', userController.getOneUser);
-router.post('/updateUser/:ID_user', userController.updateUser);
-router.post('/deleteUser/:ID_user', userController.deleteUser);
+router.get('/getAllUsers', userController.getAllUsers);
+router.get('/getOneUser/:ID_user', userController.getOneUser);
+router.put('/updateUser/:ID_user', userController.updateUser);
+router.delete('/deleteUser/:ID_user', userController.deleteUser);
+
+module.exports = router;

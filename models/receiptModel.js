@@ -16,7 +16,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Client',
+        model: 'Clients',
         key: 'ID_client',
       },
       onUpdate: 'CASCADE',
@@ -43,7 +43,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: true,
       references: {
-        model: 'Offer',
+        model: 'Offers',
         key: 'ID_offer',
       },
       onUpdate: 'CASCADE',

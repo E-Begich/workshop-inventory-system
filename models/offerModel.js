@@ -41,5 +41,28 @@ module.exports = (sequelize, DataTypes) => {
     timestamps: false,
   });
 
+  Offer.associate = (models) => {
+  Offer.belongsTo(models.Client, {
+    foreignKey: 'ID_client',
+    as: 'Client'
+  });
+
+  Offer.belongsTo(models.User, {
+    foreignKey: 'ID_user',
+    as: 'User'
+  });
+
+  Offer.hasMany(models.OfferItems, {
+    foreignKey: 'ID_offer',
+    as: 'OfferItems'
+  });
+
+  Offer.hasMany(models.Receipt, {
+    foreignKey: 'ID_offer',
+    as: 'Receipts'
+  });
+};
+
+
   return Offer;
 };

@@ -57,6 +57,23 @@ module.exports = (sequelize, DataTypes) => {
     timestamps: false,
   });
 
+  ReceiptItems.associate = (models) => {
+  ReceiptItems.belongsTo(models.Receipt, {
+    foreignKey: 'ID_receipt',
+    as: 'Receipt'
+  });
+
+  ReceiptItems.belongsTo(models.Materials, {
+    foreignKey: 'ID_material',
+    as: 'Material'
+  });
+
+  ReceiptItems.belongsTo(models.Service, {
+    foreignKey: 'ID_service',
+    as: 'Service'
+  });
+};
+
   return ReceiptItems;
 };
 

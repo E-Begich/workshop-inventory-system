@@ -1,5 +1,4 @@
 const dbConfig = require('../config/dbConfig.js');
-
 const {Sequelize, DataTypes} = require('sequelize');
 
 const sequelize = new Sequelize(
@@ -44,6 +43,14 @@ db.ReceiptItems = require('./receiptItemsModel.js')(sequelize, DataTypes)
 db.Offer = require('./offerModel.js')(sequelize, DataTypes)
 db.OfferItems = require('./offerItemsModel.js')(sequelize, DataTypes)
 db.WarehouseChange = require('./warehouseChangeModel.js')(sequelize, DataTypes)
+
+Object.keys(db).forEach(modelName => {
+  if (db[modelName].associate) {
+    db[modelName].associate(db)
+  }
+})
+
+
 
 //dio koji je jako bitan za bazu i omogućuje da se bitne informacije iz baze ne izgube
 db.sequelize.sync({ force: false })

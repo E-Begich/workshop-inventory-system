@@ -34,5 +34,12 @@ module.exports = (sequelize, DataTypes) => {
     timestamps: false,
   });
 
+  Supplier.associate = (models) => {
+  Supplier.hasMany(models.Materials, {
+    foreignKey: 'ID_supplier',
+    as: 'Materials'
+  });
+};
+
   return Supplier;
 };

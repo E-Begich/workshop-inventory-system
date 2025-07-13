@@ -31,5 +31,17 @@ module.exports = (sequelize, DataTypes) => {
     timestamps: false,
   });
 
+  Service.associate = (models) => {
+  Service.hasMany(models.OfferItems, {
+    foreignKey: 'ID_service',
+    as: 'OfferItems'
+  });
+
+  Service.hasMany(models.ReceiptItems, {
+    foreignKey: 'ID_service',
+    as: 'ReceiptItems'
+  });
+};
+
   return Service;
 };

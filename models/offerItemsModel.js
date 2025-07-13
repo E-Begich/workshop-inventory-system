@@ -61,5 +61,22 @@ module.exports = (sequelize, DataTypes) => {
     timestamps: false,
   });
 
+  OfferItems.associate = (models) => {
+  OfferItems.belongsTo(models.Offer, {
+    foreignKey: 'ID_offer',
+    as: 'Offer'
+  });
+
+  OfferItems.belongsTo(models.Materials, {
+    foreignKey: 'ID_material',
+    as: 'Material'
+  });
+
+  OfferItems.belongsTo(models.Service, {
+    foreignKey: 'ID_service',
+    as: 'Service'
+  });
+};
+
   return OfferItems;
 };

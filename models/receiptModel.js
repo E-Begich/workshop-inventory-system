@@ -1,6 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
 
-  
+
   const Receipt = sequelize.define('Receipt', {
     ID_receipt: {
       type: DataTypes.INTEGER,
@@ -53,5 +53,22 @@ module.exports = (sequelize, DataTypes) => {
     timestamps: false,
   });
 
+  Receipt.associate = (models) => {
+    Receipt.belongsTo(models.Offer, {
+      foreignKey: 'ID_offer',
+      as: 'Offer'
+    })
+
+    Receipt.belongsTo(models.Client, {
+      foreignKey: 'ID_client',
+      as: 'Client'
+    })
+
+    Receipt.hasMany(models.ReceiptItems, {
+      foreignKey: 'ID_receipt',
+      as: 'ReceiptItems'
+    })
+  }
+
   return Receipt;
-};
+}

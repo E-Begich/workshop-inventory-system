@@ -36,6 +36,13 @@ const User = sequelize.define('User', {
   timestamps: false,  // ako ne koristiš createdAt / updatedAt
 });
 
+User.associate = (models) => {
+  User.hasMany(models.Offer, {
+    foreignKey: 'ID_user',
+    as: 'Offers'
+  });
+};
+
     return User
 
 }

@@ -55,6 +55,7 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'ID_client',
       as: 'Receipts'
     })
+
   }
 
 

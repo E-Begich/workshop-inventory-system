@@ -50,6 +50,11 @@ module.exports = (sequelize, DataTypes) => {
     foreignKey: 'ID_material',
     as: 'Material'
   });
+
+    WarehouseChange.belongsTo(models.User, {
+    foreignKey: 'ID_user',
+    as: 'User'
+  });
 };
 
   return WarehouseChange;

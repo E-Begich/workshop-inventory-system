@@ -24,6 +24,7 @@ const addReceipt = async (req, res) => {
         Tax: req.body.Tax,
         PriceTax: req.body.PriceTax,
         ID_offer: req.body.ID_offer,
+        ID_user: req.body.ID_user
     }
 
     const receipt = await Receipt.create(info)

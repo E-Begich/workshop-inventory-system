@@ -49,6 +49,16 @@ module.exports = (sequelize, DataTypes) => {
       onUpdate: 'CASCADE',
       onDelete: 'SET NULL',
     },
+    ID_user: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'Users',
+        key: 'ID_user',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'RESTRICT',
+    },
   }, {
     timestamps: false,
   });
@@ -63,6 +73,11 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'ID_client',
       as: 'Client'
     })
+
+  Receipt.belongsTo(models.User, {
+    foreignKey: 'ID_user',
+    as: 'User'
+  });
 
     Receipt.hasMany(models.ReceiptItems, {
       foreignKey: 'ID_receipt',

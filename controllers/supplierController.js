@@ -30,7 +30,7 @@ const addSupplier = async (req, res) => {
     console.log(supplier)
 }
 
-// 2. Gets all offerItems from table
+// 2. Gets all supplier from table
 const getAllSupplier = async (req, res) => {
     let supplier = await db.Supplier.findAll({})
     res.send(supplier)
@@ -58,6 +58,8 @@ const deleteSupplier = async (req, res) => {
     await Supplier.destroy({where: { ID_supplier: ID_supplier }})
     res.send('Dobavljač je obrisan!')
 }
+
+//
 
 module.exports = {
     addSupplier,

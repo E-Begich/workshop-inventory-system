@@ -22,6 +22,7 @@ const App = () => {
           <div className="p-4" style={{ paddingTop: "80px" }}>
             <Routes>
               <Route path="/getAllMaterial" element={<ShowMaterials />} />
+              <Route path="/getAllSupplier" element={<ShowMaterials />} />
               {/* Dodaj ovdje druge rute po potrebi */}
             </Routes>
           </div>

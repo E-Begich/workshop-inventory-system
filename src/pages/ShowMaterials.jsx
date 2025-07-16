@@ -19,6 +19,7 @@ const ShowMaterials = () => {
     ID_supplier: '',
     TypeChange: ''
   });
+  const [suppliers, setSuppliers] = useState([]);
   const [deleteId, setDeleteId] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [search, setSearch] = useState({ naziv: '', sifra: '' });
@@ -28,7 +29,17 @@ const ShowMaterials = () => {
 
   useEffect(() => {
     fetchMaterials();
+    fetchSuppliers();
   }, []);
+
+  const fetchSuppliers = async () => {
+    try {
+      const res = await axios.get('/api/aplication/getAllSupplier');
+      setSuppliers(res.data);
+    } catch (error) {
+      console.error('Greška pri dohvaćanju dobavljača:', error);
+    }
+  };
 
   const fetchMaterials = async () => {
     const res = await axios.get('/api/aplication/getAllMaterial');
@@ -309,19 +320,30 @@ const ShowMaterials = () => {
             </Form.Group>
             <Form.Group>
               <Form.Label>Dobavljač</Form.Label>
-              <Form.Control
-                type="number"
-                value={formData.cijena}
-                onChange={(e) => setFormData({ ...formData, cijena: e.target.value })}
-              />
+              <Form.Select
+                value={formData.ID_supplier}
+                onChange={(e) => setFormData({ ...formData, ID_supplier: e.target.value })}
+              >
+                <option value="">Odaberi dobavljača</option>
+                {suppliers.map(supplier => (
+                  <option key={supplier.ID_supplier} value={supplier.ID_supplier}>
+                    {supplier.Name ? supplier.Name : supplier.ContactName}
+                  </option>
+                ))}
+              </Form.Select>
             </Form.Group>
             <Form.Group>
               <Form.Label>Vrsta promjene</Form.Label>
-              <Form.Control
-                type="number"
-                value={formData.cijena}
-                onChange={(e) => setFormData({ ...formData, cijena: e.target.value })}
-              />
+              <Form.Select
+                value={formData.TypeChange}
+                onChange={(e) => setFormData({ ...formData, TypeChange: e.target.value })}
+              >
+                <option value="">Odaberi vrstu promjene</option>
+                <option value="Nabava">Nabava</option>
+                <option value="Promocija">Promocija</option>
+                <option value="Unos">Unos</option>
+                <option value="Izmjena">Izmjena</option>
+              </Form.Select>
             </Form.Group>
           </Form>
         </Modal.Body>

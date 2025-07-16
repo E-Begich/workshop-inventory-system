@@ -45,7 +45,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
     TypeChange: {
-      type: DataTypes.ENUM('Nabava', 'Promocija', 'Restlovi'),
+      type: DataTypes.ENUM('Nabava', 'Promocija', 'Unos', 'Izmjena'),
       allowNull: false,
     },
     ID_supplier: {

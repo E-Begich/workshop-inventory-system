@@ -92,7 +92,7 @@ const ShowMaterials = () => {
   };
 
   const handleDelete = async () => {
-    await axios.delete(`/api/materials/${deleteId}`);
+    await axios.delete(`/api/aplication/deleteMaterial/${deleteId}`);
     setShowDeleteConfirm(false);
     fetchMaterials();
   };

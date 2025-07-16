@@ -17,6 +17,7 @@ const addSupplier = async (req, res) => {
 
     let info = {
         ID_supplier: req.body.ID_supplier,
+        Type: req.body.Type,
         Name: req.body.Name,
         ContactName: req.body.ContactName,
         Contact: req.body.Contact,

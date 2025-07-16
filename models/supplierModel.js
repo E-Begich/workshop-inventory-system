@@ -1,16 +1,27 @@
 module.exports = (sequelize, DataTypes) => {
 
-  
+
   const Supplier = sequelize.define('Supplier', {
     ID_supplier: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
     },
-    Name: {
+    Type: {
       type: DataTypes.ENUM('Fizička osoba', 'Tvrtka'),
       allowNull: false,
     },
+  Name: {
+    type: DataTypes.STRING(100),
+    allowNull: true, // Dozvoljava se null ali se provjerava ručno
+    validate: {
+      customValidator(value) {
+        if (this.Type === 'Tvrtka' && (!value || value.trim() === '')) {
+          throw new Error("Naziv tvrtke je obavezan ako je tip 'Tvrtka'.");
+        }
+      },
+    },
+  },
     ContactName: {
       type: DataTypes.STRING(100),
       allowNull: false,
@@ -35,11 +46,11 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Supplier.associate = (models) => {
-  Supplier.hasMany(models.Materials, {
-    foreignKey: 'ID_supplier',
-    as: 'Materials'
-  });
-};
+    Supplier.hasMany(models.Materials, {
+      foreignKey: 'ID_supplier',
+      as: 'Materials'
+    });
+  };
 
   return Supplier;
 };

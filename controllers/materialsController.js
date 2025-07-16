@@ -15,25 +15,31 @@ const WarehouseChange = db.WarehouseChange
 //1. create user 
 const addMaterial = async (req, res) => {
 
+   try {
     let info = {
-        ID_material: req.body.ID_material,
-        NameMaterial: req.body.NameMaterial,
-        CodeMaterial: req.body.CodeMaterial,
-        Amount: req.body.Amount,
-        Unit: req.body.Unit,
-        Location: req.body.Location,
-        Description: req.body.Description,
-        MinAmount: req.body.MinAmount,
-        PurchasePrice: req.body.PurchasePrice,
-        SellingPrice: req.body.SellingPrice,
-        TypeChange: req.body.TypeChange,
-        ID_supplier: req.body.ID_supplier,
-    }
+      ID_material: req.body.ID_material,
+      NameMaterial: req.body.NameMaterial,
+      CodeMaterial: req.body.CodeMaterial,
+      Amount: req.body.Amount,
+      Unit: req.body.Unit,
+      Location: req.body.Location,
+      Description: req.body.Description,
+      MinAmount: req.body.MinAmount,
+      PurchasePrice: req.body.PurchasePrice,
+      SellingPrice: req.body.SellingPrice,
+      TypeChange: req.body.TypeChange,
+      ID_supplier: req.body.ID_supplier,
+    };
 
-    const material = await Material.create(info)
-    res.status(200).send(material)
-    console.log(material)
-}
+    const material = await Materials.create(info);
+    res.status(200).send(material);
+    console.log(material);
+  } catch (error) {
+    console.error('Greška pri dodavanju materijala:', error);
+    res.status(500).send({ error: error.message });
+  }
+};
+
 
 // 2. Gets all users from table
 const getAllMaterial = async (req, res) => {

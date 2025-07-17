@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Modal, Button, Form, Table } from 'react-bootstrap';
+import { Modal, Button, Form, Table, InputGroup, FormControl } from 'react-bootstrap';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const ShowMaterials = () => {
+  const [selectedMaterialId, setSelectedMaterialId] = useState(null);
+  const [suppliers, setSuppliers] = useState([]);
   const [materials, setMaterials] = useState([]);
-  const [filtered, setFiltered] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     NameMaterial: '',
     CodeMaterial: '',
@@ -19,60 +23,45 @@ const ShowMaterials = () => {
     ID_supplier: '',
     TypeChange: ''
   });
-  const [suppliers, setSuppliers] = useState([]);
   const [deleteId, setDeleteId] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [search, setSearch] = useState({ naziv: '', sifra: '' });
-  const [sortOrder, setSortOrder] = useState({ field: '', asc: true });
+  const [searchNaziv, setSearchNaziv] = useState('');
+  const [searchSifra, setSearchSifra] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: '', direction: '' });
   const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 30;
+  const materialsPerPage = 30;
 
   useEffect(() => {
     fetchMaterials();
     fetchSuppliers();
   }, []);
 
-  const fetchSuppliers = async () => {
-    try {
-      const res = await axios.get('/api/aplication/getAllSupplier');
-      setSuppliers(res.data);
-    } catch (error) {
-      console.error('Greška pri dohvaćanju dobavljača:', error);
-    }
-  };
-
   const fetchMaterials = async () => {
     const res = await axios.get('/api/aplication/getAllMaterial');
     setMaterials(res.data);
   };
 
-  useEffect(() => {
-    let data = [...materials];
-
-    data = data.filter(mat =>
-      mat.NameMaterial.toLowerCase().includes(search.naziv.toLowerCase()) &&
-      mat.CodeMaterial.toLowerCase().includes(search.sifra.toLowerCase())
-    );
-
-    if (sortOrder.field) {
-      data.sort((a, b) => {
-        const valA = a[sortOrder.field];
-        const valB = b[sortOrder.field];
-        if (valA < valB) return sortOrder.asc ? -1 : 1;
-        if (valA > valB) return sortOrder.asc ? 1 : -1;
-        return 0;
-      });
+  const fetchSuppliers = async () => {
+    try {
+      const res = await axios.get('/api/aplication/getAllSupplier');
+      setSuppliers(res.data);
+    } catch (error) {
+      console.error('Greška pri dohvaćanju dobavljača', error);
     }
+  };
 
-    setFiltered(data);
-    setCurrentPage(1);
-  }, [search, sortOrder, materials]);
+  const getSupplierName = (id) => {
+    const supplier = suppliers.find(s => s.ID_supplier === id);
+    return supplier ? (supplier.Name || supplier.ContactName) : 'Nepoznato';
+  };
+
 
   const handleAddMaterial = async () => {
     try {
       await axios.post('/api/aplication/addMaterial', formData);
       setShowModal(false);
       fetchMaterials();
+      toast.success('Materijal uspješno dodan!');
       setFormData({
         NameMaterial: '',
         CodeMaterial: '',
@@ -87,82 +76,174 @@ const ShowMaterials = () => {
         TypeChange: ''
       });
     } catch (error) {
-      console.error('Greška prilikom dodavanja materijala:', error);
+      console.error('Greška prilikom dodavanja materijala', error);
+      toast.error('Greška prilikom dodavanja!');
     }
   };
+
+
+  const handleEditMaterial = async () => {
+    try {
+      await axios.put(`/api/aplication/updateMaterial/${selectedMaterialId}`, formData);
+      setShowModal(false);
+      fetchMaterials();
+      toast.success('Materijal uspješno ažuriran!');
+      setFormData({
+        NameMaterial: '',
+        CodeMaterial: '',
+        Amount: '',
+        Unit: '',
+        Location: '',
+        Description: '',
+        MinAmount: '',
+        PurchasePrice: '',
+        SellingPrice: '',
+        ID_supplier: '',
+        TypeChange: ''
+      });
+      setIsEditing(false);
+      setSelectedMaterialId(null);
+    } catch (error) {
+      console.error('Greška prilikom uređivanja materijala', error);
+      toast.error('Greška prilikom uređivanja!');
+    }
+  };
+
 
   const handleDelete = async () => {
-    await axios.delete(`/api/aplication/deleteMaterial/${deleteId}`);
-    setShowDeleteConfirm(false);
-    fetchMaterials();
-  };
-
-  const handleSort = (field) => {
-    if (sortOrder.field === field) {
-      setSortOrder({ ...sortOrder, asc: !sortOrder.asc });
-    } else {
-      setSortOrder({ field, asc: true });
+    try {
+      await axios.delete(`/api/aplication/deleteMaterial/${deleteId}`);
+      setShowDeleteConfirm(false);
+      fetchMaterials();
+      toast.success('Materijal uspješno obrisan!');
+    } catch (error) {
+      console.error('Greška prilikom brisanja', error);
+      toast.error('Greška prilikom brisanja!');
     }
   };
 
-  const indexOfLastRow = currentPage * rowsPerPage;
-  const indexOfFirstRow = indexOfLastRow - rowsPerPage;
-  const currentRows = filtered.slice(indexOfFirstRow, indexOfLastRow);
-  const totalPages = Math.ceil(filtered.length / rowsPerPage);
+  const openEditModal = (material) => {
+    setIsEditing(true);
+    setSelectedMaterialId(material.ID_material);
+    setFormData({
+      NameMaterial: material.NameMaterial || '',
+      CodeMaterial: material.CodeMaterial || '',
+      Amount: material.Amount || '',
+      Unit: material.Unit || '',
+      Location: material.Location || '',
+      Description: material.Description || '',
+      MinAmount: material.MinAmount || '',
+      PurchasePrice: material.PurchasePrice || '',
+      SellingPrice: material.SellingPrice || '',
+      ID_supplier: material.ID_supplier || '',
+      TypeChange: material.TypeChange || ''
+    });
+    setShowModal(true);
+  };
+
+  const sortedMaterials = [...materials].filter((m) =>
+    m.NameMaterial.toLowerCase().includes(searchNaziv.toLowerCase()) &&
+    m.CodeMaterial.toLowerCase().includes(searchSifra.toLowerCase())
+  );
+
+  if (sortConfig.key) {
+    sortedMaterials.sort((a, b) => {
+      const aVal = a[sortConfig.key];
+      const bVal = b[sortConfig.key];
+      if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+
+  const indexOfLast = currentPage * materialsPerPage;
+  const indexOfFirst = indexOfLast - materialsPerPage;
+  const currentMaterials = sortedMaterials.slice(indexOfFirst, indexOfLast);
+  const totalPages = Math.ceil(sortedMaterials.length / materialsPerPage);
+
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
 
   return (
     <div className="px-4 mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h2 className="mb-0">Materijali</h2>
-        <Button variant="danger" onClick={() => setShowModal(true)}>Dodaj materijal</Button>
+        <Button variant="danger" onClick={() => {
+          setFormData({
+            NameMaterial: '',
+            CodeMaterial: '',
+            Amount: '',
+            Unit: '',
+            Location: '',
+            Description: '',
+            MinAmount: '',
+            PurchasePrice: '',
+            SellingPrice: '',
+            ID_supplier: '',
+            TypeChange: ''
+          });
+          setIsEditing(false);
+          setShowModal(true);
+        }}>
+          Dodaj materijal
+        </Button>
       </div>
+      <div className="d-flex gap-3 mb-3">
+        <InputGroup>
+          <FormControl
+            placeholder="Pretraga po nazivu"
+            value={searchNaziv}
+            onChange={(e) => setSearchNaziv(e.target.value)}
+          />
+        </InputGroup>
+        <InputGroup>
+          <FormControl
+            placeholder="Pretraga po šifri"
+            value={searchSifra}
+            onChange={(e) => setSearchSifra(e.target.value)}
+          />
+        </InputGroup>
 
-      <div className="row mb-3">
-        <div className="col-md-6">
-          <Form.Control
-            type="text"
-            placeholder="Pretraži po nazivu"
-            value={search.naziv}
-            onChange={(e) => setSearch({ ...search, naziv: e.target.value })}
-            className="mb-2"
-          />
-        </div>
-        <div className="col-md-6">
-          <Form.Control
-            type="text"
-            placeholder="Pretraži po šifri"
-            value={search.sifra}
-            onChange={(e) => setSearch({ ...search, sifra: e.target.value })}
-            className="mb-2"
-          />
-        </div>
       </div>
 
       <Table striped bordered hover responsive size="sm">
         <thead>
           <tr>
             {[
-              { label: 'ID', field: 'ID_material' },
-              { label: 'Naziv', field: 'NameMaterial' },
-              { label: 'Šifra', field: 'CodeMaterial' },
-              { label: 'Količina', field: 'Amount' },
-              { label: 'Jedinica', field: 'Unit' },
-              { label: 'Lokacija', field: 'Location' },
-              { label: 'Opis', field: 'Description' },
-              { label: 'Min. količina', field: 'MinAmount' },
-              { label: 'Nabavna cijena', field: 'PurchasePrice' },
-              { label: 'Prodajna cijena', field: 'SellingPrice' },
-              { label: 'ID dobavljača', field: 'ID_supplier' },
-              { label: 'Tip promjene', field: 'TypeChange' },
-            ].map(col => (
-              <th key={col.field} onClick={() => handleSort(col.field)} style={{ cursor: 'pointer' }}>
-                {col.label} {sortOrder.field === col.field ? (sortOrder.asc ? '▲' : '▼') : ''}
+              { label: 'ID', key: 'ID_material' },
+              { label: 'Naziv', key: 'NameMaterial' },
+              { label: 'Šifra', key: 'CodeMaterial' },
+              { label: 'Količina', key: 'Amount' },
+              { label: 'Jedinica', key: 'Unit' },
+              { label: 'Lokacija', key: 'Location' },
+              { label: 'Opis', key: 'Description' },
+              { label: 'Min. količina', key: 'MinAmount' },
+              { label: 'Nab. cijena', key: 'PurchasePrice' },
+              { label: 'Prod. cijena', key: 'SellingPrice' },
+              { label: 'Dobavljač', key: 'ID_supplier' },
+              { label: 'Tip promjene', key: 'TypeChange' },
+            ].map(({ label, key }) => (
+              <th key={key} onClick={() => handleSort(key)} style={{ cursor: 'pointer' }}>
+                {label}{' '}
+                <span style={{ color: sortConfig.key === key ? 'black' : '#ccc' }}>
+                  {sortConfig.key === key
+                    ? sortConfig.direction === 'asc'
+                      ? '▲'
+                      : '▼'
+                    : '▲▼'}
+                </span>
               </th>
             ))}
+
           </tr>
         </thead>
         <tbody>
-          {currentRows.map((mat) => (
+          {currentMaterials.map(mat => (
             <tr key={mat.ID_material}>
               <td>{mat.ID_material}</td>
               <td>{mat.NameMaterial}</td>
@@ -174,18 +255,14 @@ const ShowMaterials = () => {
               <td>{mat.MinAmount}</td>
               <td>{mat.PurchasePrice}</td>
               <td>{mat.SellingPrice}</td>
-              <td>{mat.ID_supplier}</td>
+              <td>{getSupplierName(mat.ID_supplier)}</td>
               <td>{mat.TypeChange}</td>
               <td>
-                <Button variant="warning" size="sm" className="me-2">Uredi</Button>
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={() => {
-                    setDeleteId(mat.ID_material);
-                    setShowDeleteConfirm(true);
-                  }}
-                >
+                <Button variant="warning" size="sm" className="me-2" onClick={() => openEditModal(mat)}>Uredi</Button>
+                <Button variant="danger" size="sm" onClick={() => {
+                  setDeleteId(mat.ID_material);
+                  setShowDeleteConfirm(true);
+                }}>
                   Obriši
                 </Button>
               </td>
@@ -195,49 +272,57 @@ const ShowMaterials = () => {
       </Table>
 
       {/* PAGINACIJA */}
-      <div className="d-flex justify-content-between align-items-center mt-3">
-        <div>
-          Prikazujem {indexOfFirstRow + 1} - {Math.min(indexOfLastRow, filtered.length)} od {filtered.length} materijala
-        </div>
-        <div>
-          <Button
-            variant="outline-primary"
-            size="sm"
-            className="me-2"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((prev) => prev - 1)}
-          >
-            ⬅️ Prethodna
-          </Button>
-          {Array.from({ length: totalPages }, (_, i) => (
-            <Button
-              key={i}
-              variant={currentPage === i + 1 ? "primary" : "outline-primary"}
-              size="sm"
-              className="me-1"
-              onClick={() => setCurrentPage(i + 1)}
-            >
-              {i + 1}
-            </Button>
-          ))}
-          <Button
-            variant="outline-primary"
-            size="sm"
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage((prev) => prev + 1)}
-          >
-            Sljedeća ➡️
-          </Button>
-        </div>
+      <div className="d-flex justify-content-between align-items-center mt-3 px-2">
+  <div>
+    Prikazujem {sortedMaterials.length === 0 ? 0 : indexOfFirst + 1} - {Math.min(indexOfLast, sortedMaterials.length)} od {sortedMaterials.length} materijala
+  </div>
+</div>
+      <div className="d-flex justify-content-center">
+        <Button
+          variant="secondary"
+          disabled={currentPage === 1}
+          onClick={() => setCurrentPage(prev => prev - 1)}
+          className="me-2"
+        >
+          Prethodna
+        </Button>
+        <span className="align-self-center">Stranica {currentPage} / {totalPages}</span>
+        <Button
+          variant="secondary"
+          disabled={currentPage === totalPages}
+          onClick={() => setCurrentPage(prev => prev + 1)}
+          className="ms-2"
+        >
+          Sljedeća
+        </Button>
       </div>
 
 
-      {/* Modal za dodavanje materijala */}
-      <Modal show={showModal} onHide={() => setShowModal(false)}>
+      {/* MODAL ZA DODAVANJE/UREĐIVANJE */}
+      <Modal show={showModal} onHide={() => {
+        setShowModal(false);
+        setFormData({
+          NameMaterial: '',
+          CodeMaterial: '',
+          Amount: '',
+          Unit: '',
+          Location: '',
+          Description: '',
+          MinAmount: '',
+          PurchasePrice: '',
+          SellingPrice: '',
+          ID_supplier: '',
+          TypeChange: ''
+        });
+        setIsEditing(false);
+        setSelectedMaterialId(null);
+      }}
+      >
         <Modal.Header closeButton>
-          <Modal.Title>Dodaj novi materijal</Modal.Title>
+          <Modal.Title>{isEditing ? 'Uredi materijal' : 'Dodaj materijal'}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
+
           <Form>
             <Form.Group>
               <Form.Label>Naziv materijala</Form.Label>
@@ -349,11 +434,14 @@ const ShowMaterials = () => {
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowModal(false)}>Zatvori</Button>
-          <Button variant="success" onClick={handleAddMaterial}>Spremi</Button>
+          <Button variant="success" onClick={isEditing ? handleEditMaterial : handleAddMaterial}>
+            {isEditing ? 'Spremi izmjene' : 'Spremi'}
+          </Button>
+
         </Modal.Footer>
       </Modal>
 
-      {/* Potvrda brisanja */}
+      {/* MODAL ZA POTVRDU BRISANJA */}
       <Modal show={showDeleteConfirm} onHide={() => setShowDeleteConfirm(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Potvrda brisanja</Modal.Title>
@@ -366,6 +454,7 @@ const ShowMaterials = () => {
           <Button variant="danger" onClick={handleDelete}>Obriši</Button>
         </Modal.Footer>
       </Modal>
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar newestOnTop />
     </div>
   );
 };

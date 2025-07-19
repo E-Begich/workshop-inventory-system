@@ -289,7 +289,7 @@ const ShowMaterials = () => {
       {/* PAGINACIJA */}
       <div className="row align-items-center mt-3 px-2">
         <div className="col-12 col-md-6 mb-2 mb-md-0">
-          Prikazujem {sortedMaterials.length === 0 ? 0 : indexOfFirst + 1} - {Math.min(indexOfLast, sortedMaterials.length)} od {sortedMaterials.length} materijala
+          Prikazuje se {sortedMaterials.length === 0 ? 0 : indexOfFirst + 1} - {Math.min(indexOfLast, sortedMaterials.length)} od {sortedMaterials.length} materijala
         </div>
         <div className="col-12 col-md-6 text-md-end">
           <Button

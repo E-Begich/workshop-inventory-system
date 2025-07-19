@@ -170,133 +170,147 @@ const ShowMaterials = () => {
   };
 
   return (
-    <div className="px-4 mt-4">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2 className="mb-0">Materijali</h2>
-        <Button variant="danger" onClick={() => {
-          setFormData({
-            NameMaterial: '',
-            CodeMaterial: '',
-            Amount: '',
-            Unit: '',
-            Location: '',
-            Description: '',
-            MinAmount: '',
-            PurchasePrice: '',
-            SellingPrice: '',
-            ID_supplier: '',
-            TypeChange: ''
-          });
-          setIsEditing(false);
-          setShowModal(true);
-        }}>
-          Dodaj materijal
-        </Button>
-      </div>
-      <div className="d-flex gap-3 mb-3">
-        <InputGroup>
-          <FormControl
-            placeholder="Pretraga po nazivu"
-            value={searchNaziv}
-            onChange={(e) => setSearchNaziv(e.target.value)}
-          />
-        </InputGroup>
-        <InputGroup>
-          <FormControl
-            placeholder="Pretraga po šifri"
-            value={searchSifra}
-            onChange={(e) => setSearchSifra(e.target.value)}
-          />
-        </InputGroup>
-
+    <div className="container px-3 mt-4">
+      {/* Naslov i gumb */}
+      <div className="row align-items-center mb-3">
+        <div className="col-12 col-md">
+          <h2 className="mb-0">Materijali</h2>
+        </div>
+        <div className="col-12 col-md-auto mt-2 mt-md-0 text-md-end">
+          <Button variant="danger" onClick={() => {
+            setFormData({
+              NameMaterial: '',
+              CodeMaterial: '',
+              Amount: '',
+              Unit: '',
+              Location: '',
+              Description: '',
+              MinAmount: '',
+              PurchasePrice: '',
+              SellingPrice: '',
+              ID_supplier: '',
+              TypeChange: ''
+            });
+            setIsEditing(false);
+            setShowModal(true);
+          }}>
+            Dodaj materijal
+          </Button>
+        </div>
       </div>
 
-      <Table striped bordered hover responsive size="sm">
-        <thead>
-          <tr>
-            {[
-              { label: 'ID', key: 'ID_material' },
-              { label: 'Naziv', key: 'NameMaterial' },
-              { label: 'Šifra', key: 'CodeMaterial' },
-              { label: 'Količina', key: 'Amount' },
-              { label: 'Jedinica', key: 'Unit' },
-              { label: 'Lokacija', key: 'Location' },
-              { label: 'Opis', key: 'Description' },
-              { label: 'Min. količina', key: 'MinAmount' },
-              { label: 'Nab. cijena', key: 'PurchasePrice' },
-              { label: 'Prod. cijena', key: 'SellingPrice' },
-              { label: 'Dobavljač', key: 'ID_supplier' },
-              { label: 'Tip promjene', key: 'TypeChange' },
-            ].map(({ label, key }) => (
-              <th key={key} onClick={() => handleSort(key)} style={{ cursor: 'pointer' }}>
-                {label}{' '}
-                <span style={{ color: sortConfig.key === key ? 'black' : '#ccc' }}>
-                  {sortConfig.key === key
-                    ? sortConfig.direction === 'asc'
-                      ? '▲'
-                      : '▼'
-                    : '▲▼'}
-                </span>
-              </th>
-            ))}
+      {/* Filteri (pretraga) */}
+      <div className="row g-3 mb-3">
+        <div className="col-12 col-md-6 col-lg-4">
+          <InputGroup>
+            <FormControl
+              placeholder="Pretraga po nazivu"
+              value={searchNaziv}
+              onChange={(e) => setSearchNaziv(e.target.value)}
+            />
+          </InputGroup>
+        </div>
+        <div className="col-12 col-md-6 col-lg-4">
+          <InputGroup>
+            <FormControl
+              placeholder="Pretraga po šifri"
+              value={searchSifra}
+              onChange={(e) => setSearchSifra(e.target.value)}
+            />
+          </InputGroup>
+        </div>
+      </div>
 
-          </tr>
-        </thead>
-        <tbody>
-          {currentMaterials.map(mat => (
-            <tr key={mat.ID_material}>
-              <td>{mat.ID_material}</td>
-              <td>{mat.NameMaterial}</td>
-              <td>{mat.CodeMaterial}</td>
-              <td>{mat.Amount}</td>
-              <td>{mat.Unit}</td>
-              <td>{mat.Location}</td>
-              <td>{mat.Description}</td>
-              <td>{mat.MinAmount}</td>
-              <td>{mat.PurchasePrice}</td>
-              <td>{mat.SellingPrice}</td>
-              <td>{getSupplierName(mat.ID_supplier)}</td>
-              <td>{mat.TypeChange}</td>
-              <td>
-                <Button variant="warning" size="sm" className="me-2" onClick={() => openEditModal(mat)}>Uredi</Button>
-                <Button variant="danger" size="sm" onClick={() => {
-                  setDeleteId(mat.ID_material);
-                  setShowDeleteConfirm(true);
-                }}>
-                  Obriši
-                </Button>
-              </td>
+      <div className="table-responsive">
+        <Table striped bordered hover size="sm" className="mb-3">
+          <thead>
+            <tr>
+              {[
+                { label: 'ID', key: 'ID_material' },
+                { label: 'Naziv', key: 'NameMaterial' },
+                { label: 'Šifra', key: 'CodeMaterial' },
+                { label: 'Količina', key: 'Amount' },
+                { label: 'Jedinica', key: 'Unit' },
+                { label: 'Lokacija', key: 'Location' },
+                { label: 'Opis', key: 'Description' },
+                { label: 'Min. količina', key: 'MinAmount' },
+                { label: 'Nab. cijena', key: 'PurchasePrice' },
+                { label: 'Prod. cijena', key: 'SellingPrice' },
+                { label: 'Dobavljač', key: 'ID_supplier' },
+                { label: 'Tip promjene', key: 'TypeChange' },
+              ].map(({ label, key }) => (
+                <th key={key} onClick={() => handleSort(key)} style={{ cursor: 'pointer' }}>
+                  {label}{' '}
+                  <span style={{ color: sortConfig.key === key ? 'black' : '#ccc' }}>
+                    {sortConfig.key === key
+                      ? sortConfig.direction === 'asc'
+                        ? '▲'
+                        : '▼'
+                      : '▲▼'}
+                  </span>
+                </th>
+              ))}
+
             </tr>
-          ))}
-        </tbody>
-      </Table>
+          </thead>
+          <tbody>
+            {currentMaterials.map(mat => (
+              <tr key={mat.ID_material}>
+                <td>{mat.ID_material}</td>
+                <td>{mat.NameMaterial}</td>
+                <td>{mat.CodeMaterial}</td>
+                <td>{mat.Amount}</td>
+                <td>{mat.Unit}</td>
+                <td>{mat.Location}</td>
+                <td>{mat.Description}</td>
+                <td>{mat.MinAmount}</td>
+                <td>{mat.PurchasePrice}</td>
+                <td>{mat.SellingPrice}</td>
+                <td>{getSupplierName(mat.ID_supplier)}</td>
+                <td>{mat.TypeChange}</td>
+                <td>
+                  <td style={{ whiteSpace: 'nowrap' }}>
+                    <Button variant="warning" size="sm" className="me-2" onClick={() => openEditModal(mat)}>Uredi</Button>
+                    <Button variant="danger" size="sm" onClick={() => {
+                      setDeleteId(mat.ID_material);
+                      setShowDeleteConfirm(true);
+                    }}>
+                      Obriši
+                    </Button>
+                  </td>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      </div>
+
 
       {/* PAGINACIJA */}
-      <div className="d-flex justify-content-between align-items-center mt-3 px-2">
-  <div>
-    Prikazujem {sortedMaterials.length === 0 ? 0 : indexOfFirst + 1} - {Math.min(indexOfLast, sortedMaterials.length)} od {sortedMaterials.length} materijala
-  </div>
-</div>
-      <div className="d-flex justify-content-center">
-        <Button
-          variant="secondary"
-          disabled={currentPage === 1}
-          onClick={() => setCurrentPage(prev => prev - 1)}
-          className="me-2"
-        >
-          Prethodna
-        </Button>
-        <span className="align-self-center">Stranica {currentPage} / {totalPages}</span>
-        <Button
-          variant="secondary"
-          disabled={currentPage === totalPages}
-          onClick={() => setCurrentPage(prev => prev + 1)}
-          className="ms-2"
-        >
-          Sljedeća
-        </Button>
+      <div className="row align-items-center mt-3 px-2">
+        <div className="col-12 col-md-6 mb-2 mb-md-0">
+          Prikazujem {sortedMaterials.length === 0 ? 0 : indexOfFirst + 1} - {Math.min(indexOfLast, sortedMaterials.length)} od {sortedMaterials.length} materijala
+        </div>
+        <div className="col-12 col-md-6 text-md-end">
+          <Button
+            variant="secondary"
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(prev => prev - 1)}
+            className="me-2"
+          >
+            Prethodna
+          </Button>
+          <span className="align-middle mx-2">Stranica {currentPage} / {totalPages}</span>
+          <Button
+            variant="secondary"
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(prev => prev + 1)}
+            className="ms-2"
+          >
+            Sljedeća
+          </Button>
+        </div>
       </div>
-
 
       {/* MODAL ZA DODAVANJE/UREĐIVANJE */}
       <Modal show={showModal} onHide={() => {

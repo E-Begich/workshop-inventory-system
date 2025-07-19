@@ -1,31 +1,68 @@
-import React from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import ShowMaterials from './pages/ShowMaterials';
 import Sidebar from "./components/Sidebar";
 import TopNavBar from "./components/TopNavBar";
+import Login from "./pages/Login";
+
+const Layout = ({ sidebarOpen, toggleSidebar }) => {
+  return (
+    <div className="d-flex">
+      <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+
+      <div 
+        className="flex-grow-1" 
+        style={{ 
+          marginLeft: sidebarOpen && window.innerWidth >= 768 ? "250px" : "0", 
+          minHeight: "100vh", 
+          transition: "margin-left 0.3s ease"
+        }}
+      >
+        <TopNavBar />
+        <div className="p-4" style={{ paddingTop: "80px" }}>
+          <Routes>
+            <Route path="/" element={<ShowMaterials />} />
+            <Route path="/getAllMaterial" element={<ShowMaterials />} />
+            <Route path="/getAllSupplier" element={<ShowMaterials />} />
+            {/* Ostale rute koje koriste sidebar i navbar */}
+          </Routes>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const AppWrapper = () => {
+  const location = useLocation();
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
+
+  const toggleSidebar = () => setSidebarOpen(prev => !prev);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if(window.innerWidth < 768) {
+        setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Ako smo na login stranici, ne prikazuj sidebar i navbar, samo login
+  if(location.pathname === '/Login') {
+    return <Login />;
+  }
+
+  return <Layout sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />;
+};
 
 const App = () => {
   return (
     <BrowserRouter>
-      <div className="d-flex">
-        {/* Sidebar */}
-        <Sidebar />
-
-        <div className="flex-grow-1" style={{ marginLeft: "250px", minHeight: "100vh" }}>
-          {/* Gornja traka */}
-          <TopNavBar />
-
-          {/* Glavni sadržaj ispod navbara */}
-          <div className="p-4" style={{ paddingTop: "80px" }}>
-            <Routes>
-              <Route path="/" element={<ShowMaterials />} />
-              <Route path="/getAllMaterial" element={<ShowMaterials />} />
-              <Route path="/getAllSupplier" element={<ShowMaterials />} />
-              {/* Dodaj ovdje druge rute po potrebi */}
-            </Routes>
-          </div>
-        </div>
-      </div>
+      <AppWrapper />
     </BrowserRouter>
   );
 };

@@ -11,17 +11,17 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.ENUM('Fizička osoba', 'Tvrtka'),
       allowNull: false,
     },
-  Name: {
-    type: DataTypes.STRING(100),
-    allowNull: true, // Dozvoljava se null ali se provjerava ručno
-    validate: {
-      customValidator(value) {
-        if (this.Type === 'Tvrtka' && (!value || value.trim() === '')) {
-          throw new Error("Naziv tvrtke je obavezan ako je tip 'Tvrtka'.");
-        }
+    Name: {
+      type: DataTypes.STRING(100),
+      allowNull: true, // Dozvoljava se null ali se provjerava ručno
+      validate: {
+        customValidator(value) {
+          if (this.Type === 'Tvrtka' && (!value || value.trim() === '')) {
+            throw new Error("Naziv tvrtke je obavezan ako je tip 'Tvrtka'.");
+          }
+        },
       },
     },
-  },
     ContactName: {
       type: DataTypes.STRING(100),
       allowNull: false,
@@ -37,7 +37,19 @@ module.exports = (sequelize, DataTypes) => {
         isEmail: true,
       },
     },
-    Adress: {
+    Address: {
+      type: DataTypes.STRING(200),
+      allowNull: false,
+    },
+    City: {
+      type: DataTypes.STRING(200),
+      allowNull: false,
+    },
+    PostalCode: {
+      type: DataTypes.STRING(200),
+      allowNull: false,
+    },
+    Country: {
       type: DataTypes.STRING(200),
       allowNull: false,
     },

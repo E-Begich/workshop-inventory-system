@@ -22,7 +22,11 @@ const addSupplier = async (req, res) => {
         ContactName: req.body.ContactName,
         Contact: req.body.Contact,
         Email: req.body.Email,
-        Adress: req.body.Adress
+        Address: req.body.Address,
+        City: req.body.City,
+        PostalCode: req.body.PostalCode,
+        Country: req.body.Country
+
     }
 
     const supplier = await Supplier.create(info)
@@ -59,12 +63,17 @@ const deleteSupplier = async (req, res) => {
     res.send('Dobavljač je obrisan!')
 }
 
-//
+// 8. Get enum values for Type
+const getTypeEnum = (req, res) => {
+  const typeEnum = Supplier.rawAttributes.Type.values;
+  res.status(200).json(typeEnum);
+};
 
 module.exports = {
     addSupplier,
     getAllSupplier,
     getOneSupplier,
     updateSupplier,
-    deleteSupplier
+    deleteSupplier,
+    getTypeEnum
 }

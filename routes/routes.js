@@ -79,12 +79,19 @@ router.get('/getOneSupplier/:ID_supplier', supplierController.getOneSupplier);
 router.put('/updateSupplier/:ID_supplier', supplierController.updateSupplier);
 router.delete('/deleteSupplier/:ID_supplier', supplierController.deleteSupplier);
 
+router.get('/getTypeEnum', supplierController.getTypeEnum);
+
 //Table Materials
 router.post('/addMaterial', materialsController.addMaterial);
 router.get('/getAllMaterial', materialsController.getAllMaterial);
 router.get('/getOneMaterial/:ID_material', materialsController.getOneMaterial);
 router.put('/updateMaterial/:ID_material', materialsController.updateMaterial);
 router.delete('/deleteMaterial/:ID_material', materialsController.deleteMaterial);
+
+
+router.get('/getLocationEnum', materialsController.getLocationEnum);
+router.get('/getUnitEnum', materialsController.getUnitEnum);
+router.get('/getTypeChangeEnum', materialsController.getTypeChangeEnum);
 
 
 

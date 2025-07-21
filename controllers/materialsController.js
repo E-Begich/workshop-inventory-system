@@ -70,10 +70,31 @@ const deleteMaterial = async (req, res) => {
     res.send('Materijal je obrisan!')
 }
 
+// 6. Get enum values for Location
+const getLocationEnum = (req, res) => {
+  const locationEnums = Materials.rawAttributes.Location.values;
+  res.status(200).json(locationEnums);
+};
+
+// 7. Get enum values for Unit
+const getUnitEnum = (req, res) => {
+  const unitEnums = Materials.rawAttributes.Unit.values;
+  res.status(200).json(unitEnums);
+};
+
+// 8. Get enum values for TypeChange
+const getTypeChangeEnum = (req, res) => {
+  const typeEnums = Materials.rawAttributes.TypeChange.values;
+  res.status(200).json(typeEnums);
+};
+
 module.exports = {
     addMaterial,
     getAllMaterial,
     getOneMaterial,
     updateMaterial,
-    deleteMaterial
+    deleteMaterial,
+    getLocationEnum,
+    getUnitEnum,
+    getTypeChangeEnum
 }

@@ -1,11 +1,13 @@
 // src/components/Sidebar.js
 import React from "react";
 import './Sidebar.css';
+import '../pages/ShowMaterials';
+import '../pages/ShowSupplier';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   return (
     <>
-      {/* Hamburger dugme - prikazuje se samo na malim ekranima */}
+      {/* Hamburger gumb - prikazuje se samo na malim ekranima */}
       <button
         className="btn btn-danger d-md-none m-2"
         onClick={toggleSidebar}
@@ -47,7 +49,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             </a>
           </li>
           <li className="nav-item mb-2">
-            <a href="#" className="nav-link text-white">
+            <a href="/getAllSupplier" className="nav-link text-white">
               <i className="fas fa-folder me-2"></i>
               Dobavljači
             </a>

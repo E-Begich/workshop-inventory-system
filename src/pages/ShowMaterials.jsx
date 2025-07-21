@@ -4,9 +4,13 @@ import { Modal, Button, Form, Table, InputGroup, FormControl } from 'react-boots
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+
 const ShowMaterials = () => {
   const [selectedMaterialId, setSelectedMaterialId] = useState(null);
   const [suppliers, setSuppliers] = useState([]);
+  const [location, setLocation] = useState([]);
+  const [unit, setUnit] = useState([]);
+  const [typeChange, setTypeChange] = useState([]);
   const [materials, setMaterials] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -34,11 +38,18 @@ const ShowMaterials = () => {
   useEffect(() => {
     fetchMaterials();
     fetchSuppliers();
+    fetchLocation();
+    fetchUnit();
+    fetchTypeChange();
   }, []);
 
   const fetchMaterials = async () => {
+    try {
     const res = await axios.get('/api/aplication/getAllMaterial');
     setMaterials(res.data);
+    } catch (error) {
+      console.error('Greška pri dohvaćanju dobavljača', error);
+    }
   };
 
   const fetchSuppliers = async () => {
@@ -50,10 +61,38 @@ const ShowMaterials = () => {
     }
   };
 
+  const fetchLocation = async () => {
+    try {
+      const res = await axios.get('/api/aplication/getLocationEnum');
+      setLocation(res.data);
+    } catch (error) {
+      console.error('Greška pri dohvaćanju Lokacije', error);
+    }
+  };
+
+    const fetchUnit = async () => {
+    try {
+      const res = await axios.get('/api/aplication/getUnitEnum');
+      setUnit(res.data);
+    } catch (error) {
+      console.error('Greška pri dohvaćanju Lokacije', error);
+    }
+  };
+
+      const fetchTypeChange = async () => {
+    try {
+      const res = await axios.get('/api/aplication/getTypeChangeEnum');
+      setTypeChange(res.data);
+    } catch (error) {
+      console.error('Greška pri dohvaćanju Lokacije', error);
+    }
+  };
+
   const getSupplierName = (id) => {
     const supplier = suppliers.find(s => s.ID_supplier === id);
     return supplier ? (supplier.Name || supplier.ContactName) : 'Nepoznato';
   };
+
 
 
   const handleAddMaterial = async () => {
@@ -369,22 +408,28 @@ const ShowMaterials = () => {
                 onChange={(e) => setFormData({ ...formData, Unit: e.target.value })}
               >
                 <option value="">Odaberi jedinicu</option>
-                <option value="Metri">Metri</option>
-                <option value="Centimetri">Centimetri</option>
+                {unit.map((loc) => (
+                  <option key={loc} value={loc}>
+                    {loc}
+                  </option>
+                ))}
               </Form.Select>
             </Form.Group>
             <Form.Group>
-              <Form.Label>Lokacija</Form.Label>
+              <Form.Label>Odaberi lokaciju</Form.Label>
               <Form.Select
                 value={formData.Location}
                 onChange={(e) => setFormData({ ...formData, Location: e.target.value })}
               >
                 <option value="">Odaberi lokaciju</option>
-                <option value="Skladiste 1">Skladište 1</option>
-                <option value="Skladiste 2">Skladište 2</option>
-                <option value="Skladiste 3">Skladište 3</option>
+                {location.map((loc) => (
+                  <option key={loc} value={loc}>
+                    {loc}
+                  </option>
+                ))}
               </Form.Select>
             </Form.Group>
+
             <Form.Group>
               <Form.Label>Opis </Form.Label>
               <Form.Control
@@ -437,11 +482,12 @@ const ShowMaterials = () => {
                 value={formData.TypeChange}
                 onChange={(e) => setFormData({ ...formData, TypeChange: e.target.value })}
               >
-                <option value="">Odaberi vrstu promjene</option>
-                <option value="Nabava">Nabava</option>
-                <option value="Promocija">Promocija</option>
-                <option value="Unos">Unos</option>
-                <option value="Izmjena">Izmjena</option>
+                <option value="">Odaberivrstu promjene</option>
+                {typeChange.map((loc) => (
+                  <option key={loc} value={loc}>
+                    {loc}
+                  </option>
+                ))}
               </Form.Select>
             </Form.Group>
           </Form>

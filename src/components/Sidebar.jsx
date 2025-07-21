@@ -1,8 +1,7 @@
 // src/components/Sidebar.js
 import React from "react";
 import './Sidebar.css';
-import '../pages/ShowMaterials';
-import '../pages/ShowSupplier';
+import { Link } from "react-router-dom"; // koristi za navigaciju unutar SPA
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   return (
@@ -13,82 +12,80 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         onClick={toggleSidebar}
         aria-label="Toggle sidebar"
       >
-        <i className="fas fa-bars"></i>
+        <i className="fas fa-bars" />
       </button>
 
       <div
-        className={`sidebar d-flex flex-column text-white vh-100 p-3
-          ${isOpen ? 'sidebar-open' : ''}`}
+        className={`sidebar d-flex flex-column text-white vh-100 p-3 ${isOpen ? 'sidebar-open' : ''}`}
       >
         <h4 className="mb-4">Ovdje ide logo</h4>
 
         <ul className="nav nav-pills flex-column mb-auto">
-          {/* ... isti sadržaj kao i prije */}
           <li className="nav-item mb-2">
-            <a href="#" className="nav-link text-white">
-              <i className="fas fa-tachometer-alt me-2"></i>
+            <Link to="/" className="nav-link text-white">
+              <i className="fas fa-tachometer-alt me-2" />
               Početna
-            </a>
+            </Link>
           </li>
           <li className="nav-item mb-2">
-            <a href="#" className="nav-link text-white">
-              <i className="fas fa-folder me-2"></i>
+            <Link to="/users" className="nav-link text-white">
+              <i className="fas fa-folder me-2" />
               Korisnici - zaposlenici
-            </a>
+            </Link>
           </li>
           <li className="nav-item mb-2">
-            <a href="#" className="nav-link text-white">
-              <i className="fas fa-folder me-2"></i>
+            <Link to="/clients" className="nav-link text-white">
+              <i className="fas fa-folder me-2" />
               Klijenti
-            </a>
+            </Link>
           </li>
           <li className="nav-item mb-2">
-            <a href="/getAllMaterial" className="nav-link text-white">
-              <i className="fas fa-folder me-2"></i>
+            <Link to="/getAllMaterial" className="nav-link text-white">
+              <i className="fas fa-folder me-2" />
               Materijali
-            </a>
+            </Link>
           </li>
           <li className="nav-item mb-2">
-            <a href="/getAllSupplier" className="nav-link text-white">
-              <i className="fas fa-folder me-2"></i>
+            <Link to="/getAllSupplier" className="nav-link text-white">
+              <i className="fas fa-folder me-2" />
               Dobavljači
-            </a>
+            </Link>
           </li>
-          <li className="nav-item">
-            <a href="#" className="nav-link text-white">
-              <i className="fas fa-folder me-2"></i>
+          <li className="nav-item mb-2">
+            <Link to="/services" className="nav-link text-white">
+              <i className="fas fa-folder me-2" />
               Usluge
-            </a>
+            </Link>
           </li>
-                    <li className="nav-item">
-            <a href="#" className="nav-link text-white">
-              <i className="fas fa-folder me-2"></i>
+          <li className="nav-item mb-2">
+            <Link to="/offers/create" className="nav-link text-white">
+              <i className="fas fa-folder me-2" />
               Izrada ponude
-            </a>
+            </Link>
           </li>
-                    <li className="nav-item">
-            <a href="#" className="nav-link text-white">
-              <i className="fas fa-folder me-2"></i>
+          <li className="nav-item mb-2">
+            <Link to="/invoices/create" className="nav-link text-white">
+              <i className="fas fa-folder me-2" />
               Izrada računa
-            </a>
+            </Link>
           </li>
-                    <li className="nav-item">
-            <a href="#" className="nav-link text-white">
-              <i className="fas fa-folder me-2"></i>
+          <li className="nav-item mb-2">
+            <Link to="/offers/history" className="nav-link text-white">
+              <i className="fas fa-folder me-2" />
               Povijest ponuda
-            </a>
+            </Link>
           </li>
-                    <li className="nav-item">
-            <a href="#" className="nav-link text-white">
-              <i className="fas fa-folder me-2"></i>
+          <li className="nav-item mb-2">
+            <Link to="/invoices/history" className="nav-link text-white">
+              <i className="fas fa-folder me-2" />
               Povijest računa
-            </a>
+            </Link>
           </li>
-                    <li className="nav-item">
-            <a href="#" className="nav-link text-white">
-              <i className="fas fa-folder me-2"></i>
+          <li className="nav-item mb-2">
+            <Link to="/activity" className="nav-link text-white">
+              <i className="fas fa-folder me-2" />
               Aktivnosti
-            </a>
+            </Link>
           </li>
         </ul>
 

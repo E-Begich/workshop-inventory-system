@@ -52,7 +52,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             </Link>
           </li>
           <li className="nav-item mb-2">
-            <Link to="/services" className="nav-link text-white">
+            <Link to="/getAllService" className="nav-link text-white">
               <i className="fas fa-folder me-2" />
               Usluge
             </Link>

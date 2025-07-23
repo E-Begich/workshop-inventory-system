@@ -1,121 +1,123 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Modal, Button, Form, Table } from 'react-bootstrap';
+import { Modal, Button, Form, Table, InputGroup, FormControl } from 'react-bootstrap';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-const ShowUser = () => {
-    const [selectedUserId, setSelectedUserId] = useState(null);
-    const [users, setUsers] = useState([]);
-    const [role, setRole] = useState([]);
+const ShowService = () => {
+    const [selectedServiceId, setSelectedServiceId] = useState(null);
+    const [service, setService] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
-    const [deleteId, setDeleteId] = useState(null);
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const [sortConfig, setSortConfig] = useState({ key: '', direction: '' });
-    const sortedUsers = [...users];
-    const [currentPage, setCurrentPage] = useState(1);
-    const usersPerPage = 30;
-
     const [formData, setFormData] = useState({
         Name: '',
-        Lastname: '',
-        Email: '',
-        Password: '',
-        Role: ''
+        Description: '',
+        PriceNoTax: '',
+        Tax: '', // može biti automatski 25%
+        PriceTax: '',
     });
+    const [deleteId, setDeleteId] = useState(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [searchName, setSearchName] = useState('');
+    const [sortConfig, setSortConfig] = useState({ key: '', direction: '' });
+    const [currentPage, setCurrentPage] = useState(1);
+    const servicePerPage = 30;
 
     useEffect(() => {
-        fetchUsers();
-        fetchRole();
-    }, []);
+        fetchService();
+        const price = parseFloat(formData.PriceNoTax) || 0;
+        const taxPercent = formData.Tax === '' ? 25 : parseFloat(formData.Tax) || 0;
+        const taxAmount = (price * taxPercent) / 100;
+        const priceTax = price + taxAmount;
 
-    const fetchUsers = async () => {
+        setFormData(prev => ({
+            ...prev,
+            PriceTax: priceTax.toFixed(2),
+        }));
+    }, [formData.PriceNoTax, formData.Tax]);
+
+    const fetchService = async () => {
         try {
-            const res = await axios.get('/api/aplication/getAllUsers');
-            setUsers(res.data);
+            const res = await axios.get('/api/aplication/getAllService');
+            setService(res.data);
         } catch (error) {
-            console.error('Greška pri dohvaćanju korisnika', error);
+            console.error('Greška pri dohvaćanju usluga', error);
         }
     };
 
-    const fetchRole = async () => {
+    const handleAddService = async () => {
         try {
-            const res = await axios.get('/api/aplication/getRoleEnum');
-            setRole(res.data);
-        } catch (error) {
-            console.error('Greška pri dohvaćanju uloge', error);
-        }
-    };
-
-    const handleAddUser = async () => {
-        try {
-            await axios.post('/api/aplication/addUser', formData);
+            await axios.post('/api/aplication/addService', formData);
             setShowModal(false);
-            fetchUsers();
-            toast.success('Korisnik uspješno dodan!');
+            fetchService();
+            toast.success('Usluga je uspješno dodana!');
             setFormData({
                 Name: '',
-                Lastname: '',
-                Email: '',
-                Password: '',
-                Role: ''
+                Description: '',
+                PriceNoTax: '',
+                Tax: '', // može biti automatski 25%
+                PriceTax: '',
             });
         } catch (error) {
-            console.error('Greška prilikom dodavanja korisnika', error);
-            toast.error('Greška prilikom dodavanja!');
+            console.error('Greška prilikom dodavanja usluge', error);
+            toast.error('Greška prilikom dodavanja usluge!');
         }
     };
 
-    const handleEditUser = async () => {
+    const handleEditService = async () => {
         try {
-            await axios.put(`/api/aplication/updateUser/${selectedUserId}`, formData);
+            await axios.put(`/api/aplication/updateService/${selectedServiceId}`, formData);
             setShowModal(false);
-            fetchUsers();
-            toast.success('Korisnik ažuriran!');
+            fetchService();
+            toast.success('Usluga je uspješno ažurirana!');
             setFormData({
                 Name: '',
-                Lastname: '',
-                Email: '',
-                Password: '',
-                Role: ''
+                Description: '',
+                PriceNoTax: '',
+                Tax: '', // može biti automatski 25%
+                PriceTax: '',
             });
             setIsEditing(false);
-            setSelectedUserId(null);
+            setSelectedServiceId(null);
         } catch (error) {
-            console.error('Greška prilikom ažuriranja', error);
-            toast.error('Greška prilikom ažuriranja!');
+            console.error('Greška prilikom uređivanja usluge', error);
+            toast.error('Greška prilikom uređivanja usluge!');
         }
     };
+
 
     const handleDelete = async () => {
         try {
-            await axios.delete(`/api/aplication/deleteUser/${deleteId}`);
+            await axios.delete(`/api/aplication/deleteService/${deleteId}`);
             setShowDeleteConfirm(false);
-            fetchUsers();
-            toast.success('Korisnik je uspješno obrisan!');
+            fetchService();
+            toast.success('Usluga je uspješno obrisana!');
         } catch (error) {
             console.error('Greška prilikom brisanja', error);
             toast.error('Greška prilikom brisanja!');
         }
     };
 
-    const openEditModal = (supplier) => {
+    const openEditModal = (service) => {
         setIsEditing(true);
-        setSelectedUserId(supplier.ID_user);
+        setSelectedServiceId(service.ID_service);
         setFormData({
-            Name: supplier.Name || '',
-            Lastname: supplier.Lastname || '',
-            Email: supplier.Email || '',
-            Password: supplier.Password || '',
-            Role: supplier.Role || ''
-        })
+            Name: service.Name || '',
+            Description: service.Description || '',
+            Amount: service.Amount || '',
+            PriceNoTax: service.PriceNoTax || '',
+            Tax: service.Tax || '',
+            PriceTax: service.PriceTax || ''
+        });
         setShowModal(true);
     };
 
+    const sortedService = [...service].filter((m) =>
+        m.Name.toLowerCase().includes(searchName.toLowerCase())
+    );
 
     if (sortConfig.key) {
-        sortedUsers.sort((a, b) => {
+        sortedService.sort((a, b) => {
             const aVal = a[sortConfig.key];
             const bVal = b[sortConfig.key];
             if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
@@ -124,10 +126,10 @@ const ShowUser = () => {
         });
     }
 
-    const indexOfLast = currentPage * usersPerPage;
-    const indexOfFirst = indexOfLast - usersPerPage;
-    const currentUsers = sortedUsers.slice(indexOfFirst, indexOfLast);
-    const totalPages = Math.ceil(sortedUsers.length / usersPerPage);
+    const indexOfLast = currentPage * servicePerPage;
+    const indexOfFirst = indexOfLast - servicePerPage;
+    const currentService = sortedService.slice(indexOfFirst, indexOfLast);
+    const totalPages = Math.ceil(sortedService.length / servicePerPage);
 
     const handleSort = (key) => {
         let direction = 'asc';
@@ -137,42 +139,57 @@ const ShowUser = () => {
         setSortConfig({ key, direction });
     };
 
+
     return (
         <div className="container px-3 mt-4">
             {/* Naslov i gumb */}
             <div className="row align-items-center mb-3">
                 <div className="col-12 col-md">
-                    <h2 className="mb-0">Korisnici - zaposlenici</h2>
+                    <h2 className="mb-0">Usluge</h2>
                 </div>
                 <div className="col-12 col-md-auto mt-2 mt-md-0 text-md-end">
                     <Button
                         variant="danger" onClick={() => {
                             setFormData({
                                 Name: '',
-                                Lastname: '',
-                                Email: '',
-                                Password: '',
-                                Role: ''
-                            })
+                                Description: '',
+                                PriceNoTax: '',
+                                Tax: '', // može biti automatski 25%
+                                PriceTax: '',
+                            });
                             setIsEditing(false);
                             setShowModal(true);
                         }}
                     >
-                        Dodaj korisnika
+                        Dodaj uslugu
                     </Button>
                 </div>
             </div>
+
+            {/* Filteri (pretraga) */}
+            <div className="row g-3 mb-3">
+                <div className="col-12 col-md-6 col-lg-4">
+                    <InputGroup>
+                        <FormControl
+                            placeholder="Pretraga po nazivu"
+                            value={searchName}
+                            onChange={(e) => setSearchName(e.target.value)}
+                        />
+                    </InputGroup>
+                </div>
+            </div>
+
             <div className="table-responsive">
                 <Table striped bordered hover size="sm" className="mb-3">
                     <thead>
                         <tr>
                             {[
-                                { label: 'ID', key: 'ID_user' },
-                                { label: 'Ime', key: 'Name' },
-                                { label: 'Prezime', key: 'Lastname' },
-                                { label: 'Email', key: 'Email' },
-                                { label: 'Lozinka', key: 'Password' },
-                                { label: 'Uloga', key: 'Role' }
+                                { label: 'ID', key: 'ID_service' },
+                                { label: 'Naziv', key: 'Name' },
+                                { label: 'Opis', key: 'Description' },
+                                { label: 'PriceNoTax', key: 'Cijena bez PDV-a' },
+                                { label: 'Tax', key: 'PDV' },
+                                { label: 'PriceTax', key: 'Cijena sa PDV-om' }
                             ].map(({ label, key }) => (
                                 <th
                                     key={key}
@@ -192,14 +209,14 @@ const ShowUser = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {currentUsers.map(mat => (
-                            <tr key={mat.ID_user}>
-                                <td>{mat.ID_user}</td>
+                        {currentService.map(mat => (
+                            <tr key={mat.ID_service}>
+                                <td>{mat.ID_service}</td>
                                 <td>{mat.Name}</td>
-                                <td>{mat.Lastname}</td>
-                                <td>{mat.Email}</td>
-                                <td>{mat.Password}</td>
-                                <td>{mat.Role}</td>
+                                <td>{mat.Description}</td>
+                                <td>{mat.PriceNoTax}</td>
+                                <td>{mat.Tax}</td>
+                                <td>{mat.PriceTax}</td>
 
                                 <td style={{ whiteSpace: 'nowrap' }}>
                                     <Button variant="warning" size="sm" className="me-2" onClick={() => openEditModal(mat)}>Uredi</Button>
@@ -219,7 +236,7 @@ const ShowUser = () => {
             {/* PAGINATION */}
             <div className="row align-items-center mt-3 px-2">
                 <div className="col-12 col-md-6 mb-2 mb-md-0">
-                    Prikazuje se {sortedUsers.length === 0 ? 0 : indexOfFirst + 1} - {Math.min(indexOfLast, sortedUsers.length)} od {sortedUsers.length} korisnika
+                    Prikazuje se {sortedService.length === 0 ? 0 : indexOfFirst + 1} - {Math.min(indexOfLast, sortedService.length)} od {sortedService.length} usluga
                 </div>
                 <div className="col-12 col-md-6 text-md-end">
                     <Button
@@ -248,22 +265,22 @@ const ShowUser = () => {
                 setShowModal(false);
                 setFormData({
                     Name: '',
-                    Lastname: '',
-                    Email: '',
-                    Password: '',
-                    Role: ''
-                })
+                    Description: '',
+                    PriceNoTax: '',
+                    Tax: '',
+                    PriceTax: '',
+                });
                 setIsEditing(false);
-                setSelectedUserId(null);
+                setSelectedServiceId(null);
             }}
             >
                 <Modal.Header closeButton>
-                    <Modal.Title>{isEditing ? 'Uredi korisnika' : 'Dodaj Korisnika'}</Modal.Title>
+                    <Modal.Title>{isEditing ? 'Uredi uslugu' : 'Dodaj uslugu'}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form>
                         <Form.Group>
-                            <Form.Label>Ime</Form.Label>
+                            <Form.Label>Naziv</Form.Label>
                             <Form.Control
                                 type="text"
                                 value={formData.Name}
@@ -272,74 +289,69 @@ const ShowUser = () => {
                         </Form.Group>
 
                         <Form.Group>
-                            <Form.Label>Prezime</Form.Label>
+                            <Form.Label>Opis</Form.Label>
                             <Form.Control
                                 type="text"
-                                value={formData.Lastname}
-                                onChange={(e) => setFormData({ ...formData, Lastname: e.target.value })}
+                                value={formData.Description}
+                                onChange={(e) => setFormData({ ...formData, Description: e.target.value })}
                             />
                         </Form.Group>
 
                         <Form.Group>
-                            <Form.Label>Email</Form.Label>
+                            <Form.Label>Cijena bez PDV-a</Form.Label>
                             <Form.Control
                                 type="text"
-                                value={formData.Email}
-                                onChange={(e) => setFormData({ ...formData, Email: e.target.value })}
+                                value={formData.PriceNoTax}
+                                onChange={(e) => setFormData({ ...formData, PriceNoTax: e.target.value })}
                             />
                         </Form.Group>
 
                         <Form.Group>
-                            <Form.Label>Password</Form.Label>
+                            <Form.Label>PDV</Form.Label>
                             <Form.Control
                                 type="text"
-                                value={formData.Password}
-                                onChange={(e) => setFormData({ ...formData, Password: e.target.value })}
+                                value={formData.Tax}
+                                placeholder='25%'
+                                onChange={(e) => setFormData({ ...formData, Tax: e.target.value })}
                             />
                         </Form.Group>
 
                         <Form.Group>
-                            <Form.Label>Uloga</Form.Label>
-                            <Form.Select
-                                value={formData.Role}
-                                onChange={(e) => setFormData({ ...formData, Role: e.target.value })}
-                            >
-                                <option value="">Odaberi ulogu</option>
-                                {role.map((loc) => (
-                                    <option key={loc} value={loc}>
-                                        {loc}
-                                    </option>
-                                ))}
-                            </Form.Select>
-
+                            <Form.Label>Cijena sa PDV</Form.Label>
+                            <Form.Control
+                                type="text"
+                                value={formData.PriceTax}
+                                onChange={(e) => setFormData({ ...formData, PriceTax: e.target.value })}
+                            />
                         </Form.Group>
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowModal(false)}>Zatvori</Button>
-                    <Button variant="success" onClick={isEditing ? handleEditUser : handleAddUser}>
+                    <Button variant="success" onClick={isEditing ? handleEditService : handleAddService}>
                         {isEditing ? 'Spremi izmjene' : 'Spremi'}
                     </Button>
                 </Modal.Footer>
             </Modal >
 
-              {/* MODAL ZA POTVRDU BRISANJA */}
-              <Modal show={showDeleteConfirm} onHide={() => setShowDeleteConfirm(false)}>
+            {/* MODAL ZA POTVRDU BRISANJA */}
+            <Modal show={showDeleteConfirm} onHide={() => setShowDeleteConfirm(false)}>
                 <Modal.Header closeButton>
-                  <Modal.Title>Potvrda brisanja</Modal.Title>
+                    <Modal.Title>Potvrda brisanja</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                  Jeste li sigurni da želite obrisati ovog korisnika?
+                    Jeste li sigurni da želite obrisati ovu uslugu?
                 </Modal.Body>
                 <Modal.Footer>
-                  <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)}>Odustani</Button>
-                  <Button variant="danger" onClick={handleDelete}>Obriši</Button>
+                    <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)}>Odustani</Button>
+                    <Button variant="danger" onClick={handleDelete}>Obriši</Button>
                 </Modal.Footer>
-              </Modal>
-              <ToastContainer position="top-right" autoClose={3000} hideProgressBar newestOnTop />
-            </div>
-          );
-    
+            </Modal>
+            <ToastContainer position="top-right" autoClose={3000} hideProgressBar newestOnTop />
+        </div>
+    );
+
 };
 
-export default ShowUser
+
+export default ShowService

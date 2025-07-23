@@ -187,9 +187,9 @@ const ShowService = () => {
                                 { label: 'ID', key: 'ID_service' },
                                 { label: 'Naziv', key: 'Name' },
                                 { label: 'Opis', key: 'Description' },
-                                { label: 'PriceNoTax', key: 'Cijena bez PDV-a' },
-                                { label: 'Tax', key: 'PDV' },
-                                { label: 'PriceTax', key: 'Cijena sa PDV-om' }
+                                { label: 'Cijena bez PDV-a', key: 'PriceNoTax' },
+                                { label: 'PDV', key: 'Tax' },
+                                { label: 'Cijena sa PDV-om', key: 'PriceTax' }
                             ].map(({ label, key }) => (
                                 <th
                                     key={key}

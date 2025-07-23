@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import ShowMaterials from './pages/ShowMaterials';
 import ShowSupplier from './pages/ShowSupplier';
+import ShowUser from './pages/ShowUser';
 import Sidebar from "./components/Sidebar";
 import TopNavBar from "./components/TopNavBar";
 import Login from "./pages/Login";
@@ -25,6 +26,7 @@ const Layout = ({ sidebarOpen, toggleSidebar }) => {
             <Route path="/" element={<ShowMaterials />} />
             <Route path="/getAllMaterial" element={<ShowMaterials />} />
             <Route path="/getAllSupplier" element={<ShowSupplier />} />
+            <Route path="/getAllUsers" element={<ShowUser />} />
             {/* Ostale rute koje koriste sidebar i navbar */}
           </Routes>
         </div>

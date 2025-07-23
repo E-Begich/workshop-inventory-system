@@ -23,6 +23,8 @@ router.get('/getOneUser/:ID_user', userController.getOneUser);
 router.put('/updateUser/:ID_user', userController.updateUser);
 router.delete('/deleteUser/:ID_user', userController.deleteUser);
 
+router.get('/getRoleEnum', userController.getRoleEnum);
+
 //table Client
 router.post('/addClient', clientController.addClient);
 router.get('/getAllClients', clientController.getAllClients);

@@ -63,7 +63,7 @@ const deleteSupplier = async (req, res) => {
     res.send('Dobavljač je obrisan!')
 }
 
-// 8. Get enum values for Type
+// 6. Get enum values for Type
 const getTypeEnum = (req, res) => {
   const typeEnum = Supplier.rawAttributes.Type.values;
   res.status(200).json(typeEnum);

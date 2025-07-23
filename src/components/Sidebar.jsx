@@ -28,7 +28,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             </Link>
           </li>
           <li className="nav-item mb-2">
-            <Link to="/users" className="nav-link text-white">
+            <Link to="/getAllUsers" className="nav-link text-white">
               <i className="fas fa-folder me-2" />
               Korisnici - zaposlenici
             </Link>

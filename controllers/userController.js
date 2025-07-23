@@ -58,10 +58,17 @@ const deleteUser = async (req, res) => {
     res.send('Profil zaposlenika je obrisan!')
 }
 
+// 6. Get enum values for Role
+const getRoleEnum = (req, res) => {
+  const roleEnum = User.rawAttributes.Role.values;
+  res.status(200).json(roleEnum);
+};
+
 module.exports = {
     addUser,
     getAllUsers,
     getOneUser,
     updateUser,
-    deleteUser
+    deleteUser,
+    getRoleEnum
 }

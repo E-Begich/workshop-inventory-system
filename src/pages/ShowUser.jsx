@@ -311,8 +311,8 @@ const ShowUser = () => {
                                     </option>
                                 ))}
                             </Form.Select>
-                        </Form.Group>
 
+                        </Form.Group>
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>

@@ -32,6 +32,8 @@ router.get('/getOneClient/:ID_client', clientController.getOneClient);
 router.put('/updateClient/:ID_client', clientController.updateClient);
 router.delete('/deleteClient/:ID_client', clientController.deleteClient);
 
+router.get('/getTypeClientEnum', clientController.getTypeClientEnum);
+
 //Table Service
 router.post('/addService', serviceController.addService);
 router.get('/getAllService', serviceController.getAllService);

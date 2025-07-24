@@ -26,6 +26,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING(100),
       allowNull: false,
     },
+    Contact: {
+      type: DataTypes.STRING(200),
+      allowNull: false,
+    },
     Email: {
       type: DataTypes.STRING(150),
       allowNull: false,
@@ -33,14 +37,23 @@ module.exports = (sequelize, DataTypes) => {
         isEmail: true,
       },
     },
-    Adress: {
+    Address: {
       type: DataTypes.STRING(200),
       allowNull: false,
     },
-    Contact: {
-      type: DataTypes.STRING(50),
+    City: {
+      type: DataTypes.STRING(200),
       allowNull: false,
     },
+    PostalCode: {
+      type: DataTypes.STRING(200),
+      allowNull: false,
+    },
+    Country: {
+      type: DataTypes.STRING(200),
+      allowNull: false,
+    }
+
   }, {
     timestamps: false,
   });

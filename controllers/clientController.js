@@ -16,13 +16,16 @@ const WarehouseChange = db.WarehouseChange
 const addClient = async (req, res) => {
 
     let info = {
-        ID_client: req.body.ID_user,
+        ID_client: req.body.ID_client,
         TypeClient: req.body.TypeClient,
         Name: req.body.Name,
         ContactName: req.body.ContactName,
+        Contact: req.body.Contact,
         Email: req.body.Email,
-        Adress: req.body.Adress,
-        Contact: req.body.Contact
+        Address: req.body.Address,
+        City: req.body.City,
+        PostalCode: req.body.PostalCode,
+        Country: req.body.Country
     }
 
     const client = await Client.create(info)
@@ -37,17 +40,17 @@ const getAllClients = async (req, res) => {
 }
 
 //3. Get one user over id
-const getOneClient= async (req, res) => {
+const getOneClient = async (req, res) => {
 
     let ID_client = req.params.ID_client
-    let client = await Client.findOne({ where: { ID_client: ID_client}})
+    let client = await Client.findOne({ where: { ID_client: ID_client } })
     res.status(200).send(client)
 }
 
 //4. update user over id
 const updateClient = async (req, res) => {
     let ID_client = req.params.ID_client
-    const client = await Client.update(req.body, {where: { ID_client: ID_client }})
+    const client = await Client.update(req.body, { where: { ID_client: ID_client } })
     res.status(200).send(client)
 }
 
@@ -55,14 +58,21 @@ const updateClient = async (req, res) => {
 const deleteClient = async (req, res) => {
 
     let ID_client = req.params.ID_client
-    await Client.destroy({where: { ID_client: ID_client }})
+    await Client.destroy({ where: { ID_client: ID_client } })
     res.send('Profil klijenta je obrisan!')
 }
+
+// 6. Get enum values for Role
+const getTypeClientEnum = (req, res) => {
+    const clientEnum = Client.rawAttributes.TypeClient.values;
+    res.status(200).json(clientEnum);
+};
 
 module.exports = {
     addClient,
     getAllClients,
     getOneClient,
     updateClient,
-    deleteClient
+    deleteClient,
+    getTypeClientEnum
 }

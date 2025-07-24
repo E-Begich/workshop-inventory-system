@@ -34,7 +34,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             </Link>
           </li>
           <li className="nav-item mb-2">
-            <Link to="/clients" className="nav-link text-white">
+            <Link to="/getAllClients" className="nav-link text-white">
               <i className="fas fa-folder me-2" />
               Klijenti
             </Link>

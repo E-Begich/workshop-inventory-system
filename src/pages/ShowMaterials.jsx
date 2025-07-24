@@ -45,8 +45,8 @@ const ShowMaterials = () => {
 
   const fetchMaterials = async () => {
     try {
-    const res = await axios.get('/api/aplication/getAllMaterial');
-    setMaterials(res.data);
+      const res = await axios.get('/api/aplication/getAllMaterial');
+      setMaterials(res.data);
     } catch (error) {
       console.error('Greška pri dohvaćanju dobavljača', error);
     }
@@ -70,7 +70,7 @@ const ShowMaterials = () => {
     }
   };
 
-    const fetchUnit = async () => {
+  const fetchUnit = async () => {
     try {
       const res = await axios.get('/api/aplication/getUnitEnum');
       setUnit(res.data);
@@ -79,7 +79,7 @@ const ShowMaterials = () => {
     }
   };
 
-      const fetchTypeChange = async () => {
+  const fetchTypeChange = async () => {
     try {
       const res = await axios.get('/api/aplication/getTypeChangeEnum');
       setTypeChange(res.data);
@@ -261,7 +261,7 @@ const ShowMaterials = () => {
       </div>
 
       <div style={{ overflowX: 'auto', width: '100%' }}>
-<Table striped bordered hover size="sm" className="mb-3" style={{ minWidth: '1200px' }}>
+        <Table striped bordered hover size="sm" className="mb-3" style={{ minWidth: '1200px' }}>
           <thead>
             <tr>
               {[
@@ -289,8 +289,8 @@ const ShowMaterials = () => {
                   </span>
                 </th>
               ))}
-<th>Ukupna nabavna cijena</th>
-<th>Ukupna prodajna cijena</th>
+              <th>Ukupna nabavna cijena</th>
+              <th>Ukupna prodajna cijena</th>
             </tr>
           </thead>
           <tbody>
@@ -309,7 +309,7 @@ const ShowMaterials = () => {
                 <td>{getSupplierName(mat.ID_supplier)}</td>
                 <td>{mat.TypeChange}</td>
                 <td>{(parseFloat(mat.PurchasePrice) * parseFloat(mat.Amount)).toFixed(2)}</td>
-<td>{(parseFloat(mat.SellingPrice) * parseFloat(mat.Amount)).toFixed(2)}</td>
+                <td>{(parseFloat(mat.SellingPrice) * parseFloat(mat.Amount)).toFixed(2)}</td>
                 <td>
                   <td style={{ whiteSpace: 'nowrap' }}>
                     <Button variant="warning" size="sm" className="me-2" onClick={() => openEditModal(mat)}>Uredi</Button>
@@ -327,22 +327,22 @@ const ShowMaterials = () => {
         </Table>
       </div>
 
-<div className="mt-2 fw-bold text-end">
-  <div>
-    Ukupna nabavna cijena (prikazano): {
-      currentMaterials.reduce((acc, mat) =>
-        acc + parseFloat(mat.PurchasePrice || 0) * parseFloat(mat.Amount || 0), 0
-      ).toFixed(2)
-    } €
-  </div>
-  <div>
-    Ukupna prodajna cijena (prikazano): {
-      currentMaterials.reduce((acc, mat) =>
-        acc + parseFloat(mat.SellingPrice || 0) * parseFloat(mat.Amount || 0), 0
-      ).toFixed(2)
-    } €
-  </div>
-</div>
+      <div className="mt-2 fw-bold text-end">
+        <div>
+          Ukupna nabavna cijena (prikazano): {
+            currentMaterials.reduce((acc, mat) =>
+              acc + parseFloat(mat.PurchasePrice || 0) * parseFloat(mat.Amount || 0), 0
+            ).toFixed(2)
+          } €
+        </div>
+        <div>
+          Ukupna prodajna cijena (prikazano): {
+            currentMaterials.reduce((acc, mat) =>
+              acc + parseFloat(mat.SellingPrice || 0) * parseFloat(mat.Amount || 0), 0
+            ).toFixed(2)
+          } €
+        </div>
+      </div>
 
 
       {/* PAGINACIJA */}

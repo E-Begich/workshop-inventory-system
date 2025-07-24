@@ -380,7 +380,7 @@ const ShowSuppliers = () => {
                 type="text"
                 value={formData.Name}
                 onChange={(e) => setFormData({ ...formData, Name: e.target.value })}
-                disabled={formData.Type === 'Fizička osoba'} // 🔒 disable ako je Tvrtka
+                disabled={formData.Type === 'Fizička osoba'} // disable ako je Tvrtka
                 placeholder={formData.Type === 'Fizička osoba' ? 'Nije potrebno za fizičku osobu' : ''}
               />
             </Form.Group>

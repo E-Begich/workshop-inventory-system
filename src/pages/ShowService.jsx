@@ -13,7 +13,7 @@ const ShowService = () => {
         Name: '',
         Description: '',
         PriceNoTax: '',
-        Tax: '', // može biti automatski 25%
+        Tax: '25', // može biti automatski 25%
         PriceTax: '',
     });
     const [deleteId, setDeleteId] = useState(null);
@@ -25,8 +25,13 @@ const ShowService = () => {
 
     useEffect(() => {
         fetchService();
+
         const price = parseFloat(formData.PriceNoTax) || 0;
-        const taxPercent = formData.Tax === '' ? 25 : parseFloat(formData.Tax) || 0;
+        // Koristi 25 samo ako je Tax prazan string i PriceNoTax nije prazan
+        const taxPercent = formData.Tax === '' && formData.PriceNoTax !== ''
+            ? 25
+            : parseFloat(formData.Tax) || 0;
+
         const taxAmount = (price * taxPercent) / 100;
         const priceTax = price + taxAmount;
 
@@ -46,8 +51,14 @@ const ShowService = () => {
     };
 
     const handleAddService = async () => {
+        // Pripremi podatke za slanje – ako je Tax prazan, postavi 25
+        const serviceData = {
+            ...formData,
+            Tax: formData.Tax === '' || formData.Tax == null ? 25 : formData.Tax
+        };
+
         try {
-            await axios.post('/api/aplication/addService', formData);
+            await axios.post('/api/aplication/addService', serviceData);
             setShowModal(false);
             fetchService();
             toast.success('Usluga je uspješno dodana!');
@@ -215,13 +226,13 @@ const ShowService = () => {
                                 <td>{mat.Name}</td>
                                 <td>{mat.Description}</td>
                                 <td>{mat.PriceNoTax}</td>
-                                <td>{mat.Tax}</td>
+                                <td> {mat.Tax}%</td>
                                 <td>{mat.PriceTax}</td>
 
                                 <td style={{ whiteSpace: 'nowrap' }}>
                                     <Button variant="warning" size="sm" className="me-2" onClick={() => openEditModal(mat)}>Uredi</Button>
                                     <Button variant="danger" size="sm" onClick={() => {
-                                        setDeleteId(mat.ID_user);
+                                        setDeleteId(mat.ID_service);
                                         setShowDeleteConfirm(true);
                                     }}>
                                         Obriši

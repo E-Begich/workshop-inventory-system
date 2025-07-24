@@ -21,6 +21,7 @@ const ShowUser = () => {
         Name: '',
         Lastname: '',
         Email: '',
+        Contact: '',
         Password: '',
         Role: ''
     });
@@ -58,6 +59,7 @@ const ShowUser = () => {
                 Name: '',
                 Lastname: '',
                 Email: '',
+                Contact: '',
                 Password: '',
                 Role: ''
             });
@@ -77,6 +79,7 @@ const ShowUser = () => {
                 Name: '',
                 Lastname: '',
                 Email: '',
+                Contact: '',
                 Password: '',
                 Role: ''
             });
@@ -100,15 +103,16 @@ const ShowUser = () => {
         }
     };
 
-    const openEditModal = (supplier) => {
+    const openEditModal = (user) => {
         setIsEditing(true);
-        setSelectedUserId(supplier.ID_user);
+        setSelectedUserId(user.ID_user);
         setFormData({
-            Name: supplier.Name || '',
-            Lastname: supplier.Lastname || '',
-            Email: supplier.Email || '',
-            Password: supplier.Password || '',
-            Role: supplier.Role || ''
+            Name: user.Name || '',
+            Lastname: user.Lastname || '',
+            Email: user.Email || '',
+            Contact: user.Contact || '',
+            Password: user.Password || '',
+            Role: user.Role || ''
         })
         setShowModal(true);
     };
@@ -151,6 +155,7 @@ const ShowUser = () => {
                                 Name: '',
                                 Lastname: '',
                                 Email: '',
+                                Contact: '',
                                 Password: '',
                                 Role: ''
                             })
@@ -171,6 +176,7 @@ const ShowUser = () => {
                                 { label: 'Ime', key: 'Name' },
                                 { label: 'Prezime', key: 'Lastname' },
                                 { label: 'Email', key: 'Email' },
+                                { label: 'Kontakt', key: 'Contact' },
                                 { label: 'Lozinka', key: 'Password' },
                                 { label: 'Uloga', key: 'Role' }
                             ].map(({ label, key }) => (
@@ -198,6 +204,7 @@ const ShowUser = () => {
                                 <td>{mat.Name}</td>
                                 <td>{mat.Lastname}</td>
                                 <td>{mat.Email}</td>
+                                <td>{mat.Contact}</td>
                                 <td>{mat.Password}</td>
                                 <td>{mat.Role}</td>
 
@@ -250,6 +257,7 @@ const ShowUser = () => {
                     Name: '',
                     Lastname: '',
                     Email: '',
+                    Contact: '',
                     Password: '',
                     Role: ''
                 })
@@ -290,6 +298,15 @@ const ShowUser = () => {
                         </Form.Group>
 
                         <Form.Group>
+                            <Form.Label>Kontakt</Form.Label>
+                            <Form.Control
+                                type="text"
+                                value={formData.Contact}
+                                onChange={(e) => setFormData({ ...formData, Contact: e.target.value })}
+                            />
+                        </Form.Group>
+
+                        <Form.Group>
                             <Form.Label>Password</Form.Label>
                             <Form.Control
                                 type="text"
@@ -323,23 +340,23 @@ const ShowUser = () => {
                 </Modal.Footer>
             </Modal >
 
-              {/* MODAL ZA POTVRDU BRISANJA */}
-              <Modal show={showDeleteConfirm} onHide={() => setShowDeleteConfirm(false)}>
+            {/* MODAL ZA POTVRDU BRISANJA */}
+            <Modal show={showDeleteConfirm} onHide={() => setShowDeleteConfirm(false)}>
                 <Modal.Header closeButton>
-                  <Modal.Title>Potvrda brisanja</Modal.Title>
+                    <Modal.Title>Potvrda brisanja</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                  Jeste li sigurni da želite obrisati ovog korisnika?
+                    Jeste li sigurni da želite obrisati ovog korisnika?
                 </Modal.Body>
                 <Modal.Footer>
-                  <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)}>Odustani</Button>
-                  <Button variant="danger" onClick={handleDelete}>Obriši</Button>
+                    <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)}>Odustani</Button>
+                    <Button variant="danger" onClick={handleDelete}>Obriši</Button>
                 </Modal.Footer>
-              </Modal>
-              <ToastContainer position="top-right" autoClose={3000} hideProgressBar newestOnTop />
-            </div>
-          );
-    
+            </Modal>
+            <ToastContainer position="top-right" autoClose={3000} hideProgressBar newestOnTop />
+        </div>
+    );
+
 };
 
 export default ShowUser

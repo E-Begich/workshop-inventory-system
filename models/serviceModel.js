@@ -1,6 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
 
-  
+
   const Service = sequelize.define('Service', {
     ID_service: {
       type: DataTypes.INTEGER,
@@ -20,8 +20,9 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
     Tax: {
-      type: DataTypes.DECIMAL(5, 2), // unos postotka, npr. 25.00 za 25%
+      type: DataTypes.DECIMAL(5, 2),
       allowNull: false,
+      defaultValue: 25
     },
     PriceTax: {
       type: DataTypes.DECIMAL(10, 2),
@@ -32,16 +33,16 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Service.associate = (models) => {
-  Service.hasMany(models.OfferItems, {
-    foreignKey: 'ID_service',
-    as: 'OfferItems'
-  });
+    Service.hasMany(models.OfferItems, {
+      foreignKey: 'ID_service',
+      as: 'OfferItems'
+    });
 
-  Service.hasMany(models.ReceiptItems, {
-    foreignKey: 'ID_service',
-    as: 'ReceiptItems'
-  });
-};
+    Service.hasMany(models.ReceiptItems, {
+      foreignKey: 'ID_service',
+      as: 'ReceiptItems'
+    });
+  };
 
   return Service;
 };

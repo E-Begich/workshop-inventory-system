@@ -14,20 +14,24 @@ const WarehouseChange = db.WarehouseChange
 
 //1. create user 
 const addService = async (req, res) => {
+    try {
+        let info = {
+            ID_service: req.body.ID_service,
+            Name: req.body.Name,
+            Description: req.body.Description,
+            PriceNoTax: req.body.PriceNoTax,
+            Tax: req.body.Tax === '' || req.body.Tax == null ? 25 : parseFloat(req.body.Tax),
+            PriceTax: req.body.PriceTax
+        };
 
-    let info = {
-        ID_service: req.body.ID_service,
-        Name: req.body.Name,
-        Description: req.body.Description,
-        PriceNoTax: req.body.PriceNoTax,
-        Tax: req.body.Tax,
-        PriceTax: req.body.PriceTax
+        const service = await Service.create(info);
+        res.status(200).send(service);
+        console.log('Dodana usluga:', service);
+    } catch (error) {
+        console.error('Greška prilikom dodavanja servisa:', error);
+        res.status(500).send({ error: 'Neuspješno dodavanje usluge' });
     }
-
-    const service = await Service.create(info)
-    res.status(200).send(service)
-    console.log(service)
-}
+};
 
 // 2. Gets all users from table
 const getAllService = async (req, res) => {

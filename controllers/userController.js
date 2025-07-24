@@ -20,6 +20,7 @@ const addUser = async (req, res) => {
         Name: req.body.Name,
         Lastname: req.body.Lastname,
         Email: req.body.Email,
+        Contact: req.body.Contact,
         Password: req.body.Password,
         Role: req.body.Role
     }

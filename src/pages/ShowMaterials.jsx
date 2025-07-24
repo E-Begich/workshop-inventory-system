@@ -209,7 +209,7 @@ const ShowMaterials = () => {
   };
 
   return (
-    <div className="container px-3 mt-4">
+    <div className="container-fluid px-2 mt-4">
       {/* Naslov i gumb */}
       <div className="row align-items-center mb-3">
         <div className="col-12 col-md">
@@ -260,8 +260,8 @@ const ShowMaterials = () => {
         </div>
       </div>
 
-      <div className="table-responsive">
-        <Table striped bordered hover size="sm" className="mb-3">
+      <div style={{ overflowX: 'auto', width: '100%' }}>
+<Table striped bordered hover size="sm" className="mb-3" style={{ minWidth: '1200px' }}>
           <thead>
             <tr>
               {[
@@ -289,7 +289,8 @@ const ShowMaterials = () => {
                   </span>
                 </th>
               ))}
-
+<th>Ukupna nabavna cijena</th>
+<th>Ukupna prodajna cijena</th>
             </tr>
           </thead>
           <tbody>
@@ -307,6 +308,8 @@ const ShowMaterials = () => {
                 <td>{mat.SellingPrice}</td>
                 <td>{getSupplierName(mat.ID_supplier)}</td>
                 <td>{mat.TypeChange}</td>
+                <td>{(parseFloat(mat.PurchasePrice) * parseFloat(mat.Amount)).toFixed(2)}</td>
+<td>{(parseFloat(mat.SellingPrice) * parseFloat(mat.Amount)).toFixed(2)}</td>
                 <td>
                   <td style={{ whiteSpace: 'nowrap' }}>
                     <Button variant="warning" size="sm" className="me-2" onClick={() => openEditModal(mat)}>Uredi</Button>
@@ -323,6 +326,23 @@ const ShowMaterials = () => {
           </tbody>
         </Table>
       </div>
+
+<div className="mt-2 fw-bold text-end">
+  <div>
+    Ukupna nabavna cijena (prikazano): {
+      currentMaterials.reduce((acc, mat) =>
+        acc + parseFloat(mat.PurchasePrice || 0) * parseFloat(mat.Amount || 0), 0
+      ).toFixed(2)
+    } €
+  </div>
+  <div>
+    Ukupna prodajna cijena (prikazano): {
+      currentMaterials.reduce((acc, mat) =>
+        acc + parseFloat(mat.SellingPrice || 0) * parseFloat(mat.Amount || 0), 0
+      ).toFixed(2)
+    } €
+  </div>
+</div>
 
 
       {/* PAGINACIJA */}
@@ -482,7 +502,7 @@ const ShowMaterials = () => {
                 value={formData.TypeChange}
                 onChange={(e) => setFormData({ ...formData, TypeChange: e.target.value })}
               >
-                <option value="">Odaberivrstu promjene</option>
+                <option value="">Odaberi vrstu promjene</option>
                 {typeChange.map((loc) => (
                   <option key={loc} value={loc}>
                     {loc}

@@ -4,6 +4,7 @@ import ShowMaterials from './pages/ShowMaterials';
 import ShowSupplier from './pages/ShowSupplier';
 import ShowUser from './pages/ShowUser';
 import ShowService from './pages/ShowService';
+import ShowOffer from './pages/ShowOffer';
 import ShowClient from './pages/ShowClient';
 import Sidebar from "./components/Sidebar";
 import TopNavBar from "./components/TopNavBar";
@@ -31,6 +32,7 @@ const Layout = ({ sidebarOpen, toggleSidebar }) => {
             <Route path="/getAllUsers" element={<ShowUser />} />
             <Route path="/getAllService" element={<ShowService />} />
             <Route path="/getAllClients" element={<ShowClient />} />
+             <Route path="/getAllOffer" element={<ShowOffer />} />
             {/* Ostale rute koje koriste sidebar i navbar */}
           </Routes>
         </div>

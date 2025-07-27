@@ -25,7 +25,6 @@ module.exports = (sequelize, DataTypes) => {
     DateEnd: {
       type: DataTypes.DATEONLY,
       allowNull: false,
-      // Postavit ćeš ovo ručno prilikom unosa – vidi dolje
     },
     ID_user: {
       type: DataTypes.INTEGER,

@@ -55,6 +55,9 @@ router.get('/getOneOfferItem/:ID_offerItems', offerItemsController.getOneOfferIt
 router.put('/updateOfferItem/:ID_offerItems', offerItemsController.updateOfferItem);
 router.delete('/deleteOfferItem/:ID_offerItems', offerItemsController.deleteOfferItem);
 
+router.get('/getTypeItemEnum', offerItemsController.getTypeItemEnum);
+
+
 //Table WarehouseChange
 router.post('/addChange', warehouseChangeController.addChange);
 router.get('/getAllChange', warehouseChangeController.getAllChange);

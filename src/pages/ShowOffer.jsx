@@ -28,6 +28,8 @@ const ShowOffer = () => {
         Tax: 25,
         PriceTax: 0,
     });
+    const [editingIndex, setEditingIndex] = useState(null); // indeks stavke koja se uređuje
+
 
     const today = () => new Date().toISOString().split('T')[0];
     const addDays = (n) => new Date(Date.now() + n * 86400000).toISOString().split('T')[0];
@@ -81,11 +83,16 @@ const ShowOffer = () => {
         try {
             const res = await axios.get('/api/aplication/getTypeItemEnum');
             setTypeEnum(res.data);
-          //  console.log(res.data)
+            //  console.log(res.data)
         } catch (error) {
             console.error('Greška pri dohvaćanju', error);
 
         }
+    };
+
+    const startEditing = (index) => {
+        setEditingIndex(index);
+        setNewItem({ ...offerItems[index] });
     };
 
     const handleAddItem = () => {
@@ -158,6 +165,65 @@ const ShowOffer = () => {
         } catch (err) {
             console.error('Greška:', err);
             toast.error('Greška pri spremanju ponude!');
+        }
+    };
+
+const saveEditedItem = () => {
+    const updatedItems = [...offerItems];
+
+    const editedItem = { ...newItem };
+
+    const amount = parseFloat(editedItem.Amount || 0);
+    let priceNoTax = 0;
+    let priceTax = 0;
+
+    if (editedItem.TypeItem === 'Materijal') {
+        const selected = materials.find(m => String(m.ID_material) === String(editedItem.ID_material));
+        if (selected) {
+            priceNoTax = parseFloat(selected.SellingPrice || 0) * amount;
+            priceTax = priceNoTax * 1.25;
+        }
+    } else if (editedItem.TypeItem === 'Usluga') {
+        const selected = service.find(s => String(s.ID_service) === String(editedItem.ID_service));
+        if (selected) {
+            priceNoTax = parseFloat(selected.PriceNoTax || 0) * amount;
+            priceTax = priceNoTax * 1.25;
+        }
+    }
+
+    editedItem.PriceNoTax = priceNoTax;
+    editedItem.PriceTax = priceTax;
+
+    updatedItems[editingIndex] = editedItem;
+    setOfferItems(updatedItems);
+    setEditingIndex(null);
+
+    setNewItem({
+        ID_material: '',
+        ID_service: '',
+        TypeItem: '',
+        Amount: '',
+        PriceNoTax: 0,
+        Tax: 25,
+        PriceTax: 0,
+    });
+};
+
+
+    const deleteItem = (index) => {
+        const updatedItems = offerItems.filter((_, i) => i !== index);
+        setOfferItems(updatedItems);
+        if (editingIndex === index) {
+            setEditingIndex(null);
+            setNewItem({
+                ID_material: '',
+                ID_service: '',
+                TypeItem: '',
+                Amount: '',
+                PriceNoTax: 0,
+                Tax: 25,
+                PriceTax: 0,
+            });
         }
     };
 
@@ -360,9 +426,10 @@ const ShowOffer = () => {
                         </Row>
 
                         <div className="d-flex justify-content-end">
-                            <Button variant="secondary" onClick={handleAddItem}>
-                                + Dodaj stavku
+                            <Button variant="secondary" onClick={editingIndex !== null ? saveEditedItem : handleAddItem}>
+                                {editingIndex !== null ? "Spremi izmjene" : "Dodaj stavku"}
                             </Button>
+
                         </div>
                     </Form>
                 </Card.Body>
@@ -381,6 +448,7 @@ const ShowOffer = () => {
                         <th>Jedinična cijena s PDV-om</th>
                         <th>PDV (%)</th>
                         <th>Ukupna cijena s PDV-om</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -429,6 +497,23 @@ const ShowOffer = () => {
                                 <td>{priceTax.toFixed(2)} €</td>
                                 <td>{tax}%</td>
                                 <td>{totalPriceTax.toFixed(2)} €</td>
+                                <td>
+                                    <Button
+                                        size="sm"
+                                        variant="warning"
+                                        className="me-2"
+                                        onClick={() => startEditing(index)}
+                                    >
+                                        Uredi
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="danger"
+                                        onClick={() => deleteItem(index)}
+                                    >
+                                        Obriši
+                                    </Button>
+                                </td>
                             </tr>
                         );
                     })}
@@ -436,7 +521,7 @@ const ShowOffer = () => {
             </Table>
 
 
-            <Button variant="primary" onClick={handleSubmitOffer} className="ms-3">
+            <Button variant="danger" onClick={handleSubmitOffer} className="ms-3">
                 Kreiraj ponudu
             </Button>
             <ToastContainer position="top-right" autoClose={3000} hideProgressBar newestOnTop />

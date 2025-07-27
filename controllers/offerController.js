@@ -12,7 +12,7 @@ const Offer = db.Offer
 const OfferItems = db.OfferItems
 const WarehouseChange = db.WarehouseChange
 
-//1. create user 
+//1. create offer
 const addOffer = async (req, res) => {
 
     let info = {

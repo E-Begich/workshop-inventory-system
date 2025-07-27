@@ -1,9 +1,14 @@
 // src/components/Sidebar.js
-import React from "react";
+import React, { useState } from "react";
 import './Sidebar.css';
 import { Link } from "react-router-dom"; // koristi za navigaciju unutar SPA
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
+  const [isIzradaOpen, setIsIzradaOpen] = useState(false);
+  const toggleIzrada = () => setIsIzradaOpen(!isIzradaOpen);
+
+  const [isPovijestOpen, setIsPovijestOpen] = useState(false);
+  const togglePovijest = () => setIsPovijestOpen(!isPovijestOpen);
   return (
     <>
       {/* Hamburger gumb - prikazuje se samo na malim ekranima */}
@@ -58,28 +63,62 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             </Link>
           </li>
           <li className="nav-item mb-2">
-            <Link to="/getAllOffer" className="nav-link text-white">
-              <i className="fas fa-folder me-2" />
-              Izrada ponude
-            </Link>
+            <button
+              className="nav-link text-white bg-transparent border-0 w-100 text-start d-flex justify-content-between align-items-center"
+              onClick={toggleIzrada}
+            >
+              <span>
+                <i className="fas fa-folder me-2" />
+                Izrada
+              </span>
+              <i className={`fas fa-chevron-${isIzradaOpen ? "up" : "down"}`} />
+            </button>
+
+            {isIzradaOpen && (
+              <ul className="nav flex-column ms-3">
+                <li className="nav-item mb-1">
+                  <Link to="/addOffer" className="nav-link text-white">
+                    <i className="fas fa-file-alt me-2" />
+                    Izrada ponude
+                  </Link>
+                </li>
+                <li className="nav-item mb-1">
+                  <Link to="/invoices/create" className="nav-link text-white">
+                    <i className="fas fa-file-invoice-dollar me-2" />
+                    Izrada računa
+                  </Link>
+                </li>
+              </ul>
+            )}
           </li>
           <li className="nav-item mb-2">
-            <Link to="/invoices/create" className="nav-link text-white">
-              <i className="fas fa-folder me-2" />
-              Izrada računa
-            </Link>
-          </li>
-          <li className="nav-item mb-2">
-            <Link to="/offers/history" className="nav-link text-white">
-              <i className="fas fa-folder me-2" />
-              Povijest ponuda
-            </Link>
-          </li>
-          <li className="nav-item mb-2">
-            <Link to="/invoices/history" className="nav-link text-white">
-              <i className="fas fa-folder me-2" />
-              Povijest računa
-            </Link>
+            <button
+              className="nav-link text-white bg-transparent border-0 w-100 text-start d-flex justify-content-between align-items-center"
+              onClick={togglePovijest}
+            >
+              <span>
+                <i className="fas fa-folder me-2" />
+                Povijest
+              </span>
+              <i className={`fas fa-chevron-${isPovijestOpen ? "up" : "down"}`} />
+            </button>
+
+            {isPovijestOpen && (
+              <ul className="nav flex-column ms-3">
+                <li className="nav-item mb-1">
+                  <Link to="/offers/history" className="nav-link text-white">
+                    <i className="fas fa-history me-2" />
+                    Povijest ponuda
+                  </Link>
+                </li>
+                <li className="nav-item mb-1">
+                  <Link to="/invoices/history" className="nav-link text-white">
+                    <i className="fas fa-receipt me-2" />
+                    Povijest računa
+                  </Link>
+                </li>
+              </ul>
+            )}
           </li>
           <li className="nav-item mb-2">
             <Link to="/activity" className="nav-link text-white">
@@ -87,6 +126,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
               Aktivnosti
             </Link>
           </li>
+
         </ul>
 
         {/* Dugme za zatvaranje sidebar-a na malim ekranima */}

@@ -38,3 +38,12 @@
     transform: translateX(0);
   }
 }
+
+.sidebar .nav .nav-link {
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.sidebar .nav .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}

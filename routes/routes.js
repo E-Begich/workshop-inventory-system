@@ -72,12 +72,18 @@ router.get('/getOneReceipt/:ID_receipt', receiptController.getOneReceipt);
 router.put('/updateReceipt/:ID_receipt', receiptController.updateReceipt);
 router.delete('/deleteReceipt/:ID_receipt', receiptController.deleteReceipt);
 
+router.post('/createReceiptFromOffer', receiptController.createReceiptFromOffer);
+
+
 //Table ReceiptItems
 router.post('/addReceiptItem', receiptItemsController.addReceiptItems);
 router.get('/getAllReceiptItem', receiptItemsController.getAllReceiptItems);
 router.get('/getOneReceiptItem/:ID_recItems', receiptItemsController.getOneReceiptItem);
 router.put('/updateReceiptItem/:ID_recItems', receiptItemsController.updateReceiptItem);
 router.delete('/deleteReceiptItem/:ID_recItems', receiptItemsController.deleteReceiptItem);
+
+router.get('/getRecTypeItemEnum', receiptItemsController.getRecTypeItemEnum);
+
 
 //Table Supplier
 router.post('/addSupplier', supplierController.addSupplier);

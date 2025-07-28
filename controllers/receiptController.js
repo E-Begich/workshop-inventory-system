@@ -12,7 +12,7 @@ const Offer = db.Offer
 const OfferItems = db.OfferItems
 const WarehouseChange = db.WarehouseChange
 
-//1. create user 
+//1. create receipt
 const addReceipt = async (req, res) => {
 
     let info = {
@@ -61,10 +61,73 @@ const deleteReceipt = async (req, res) => {
     res.send('Račun je obrisan!')
 }
 
+// 6. Create receipt from offer
+const createReceiptFromOffer = async (req, res) => {
+  const { ID_offer, ID_user } = req.body;
+
+  try {
+    // 1. Pronađi ponudu
+    const offer = await Offer.findOne({
+      where: { ID_offer },
+      include: [
+        {
+          model: OfferItems,
+          as: 'OfferItems'
+        }
+      ]
+    });
+
+    if (!offer) {
+      return res.status(404).json({ error: 'Ponuda nije pronađena' });
+    }
+
+    // 2. Izračun cijena
+    const priceNoTax = offer.OfferItems.reduce((sum, item) => sum + parseFloat(item.PriceNoTax), 0);
+    const priceTax = offer.OfferItems.reduce((sum, item) => sum + parseFloat(item.PriceTax), 0);
+    const tax = priceTax - priceNoTax;
+
+    // 3. Generiraj broj računa
+    const receiptNumber = `R-${Date.now()}`;
+
+    // 4. Kreiraj Receipt
+    const receipt = await Receipt.create({
+      ReceiptNumber: receiptNumber,
+      ID_client: offer.ID_client,
+      DateCreate: new Date(),
+      PriceNoTax: priceNoTax,
+      Tax: tax,
+      PriceTax: priceTax,
+      ID_offer: ID_offer,
+      ID_user: ID_user
+    });
+
+    // 5. Kreiraj stavke (ReceiptItems)
+    for (const item of offer.OfferItems) {
+      await ReceiptItems.create({
+        ID_receipt: receipt.ID_receipt,
+        TypeItem: item.TypeItem,
+        ID_material: item.ID_material,
+        ID_service: item.ID_service,
+        Amount: item.Amount,
+        PriceNoTax: item.PriceNoTax,
+        Tax: item.Tax,
+        PriceTax: item.PriceTax
+      });
+    }
+
+    return res.status(201).json({ message: 'Račun uspješno kreiran iz ponude', receipt });
+  } catch (error) {
+    console.error('Greška prilikom kreiranja računa:', error);
+    return res.status(500).json({ error: 'Greška na serveru' });
+  }
+};
+
+
 module.exports = {
     addReceipt,
     getAllReceipt,
     getOneReceipt,
     updateReceipt,
-    deleteReceipt
+    deleteReceipt,
+    createReceiptFromOffer
 }

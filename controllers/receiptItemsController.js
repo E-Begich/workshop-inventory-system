@@ -62,10 +62,17 @@ const deleteReceiptItem = async (req, res) => {
     res.send('Stavka je obrisana!')
 }
 
+   // 8. Get enum values for TypeItem
+    const getRecTypeItemEnum = (req, res) => {
+      const typeEnums = OfferItems.rawAttributes.TypeItem.values;
+      res.status(200).json(typeEnums);
+    };
+
 module.exports = {
     addReceiptItems,
     getAllReceiptItems,
     getOneReceiptItem,
     updateReceiptItem,
-    deleteReceiptItem
+    deleteReceiptItem,
+    getRecTypeItemEnum
 }

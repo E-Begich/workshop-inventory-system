@@ -83,7 +83,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                   </Link>
                 </li>
                 <li className="nav-item mb-1">
-                  <Link to="/invoices/create" className="nav-link text-white">
+                  <Link to="/addReceipt" className="nav-link text-white">
                     <i className="fas fa-file-invoice-dollar me-2" />
                     Izrada računa
                   </Link>

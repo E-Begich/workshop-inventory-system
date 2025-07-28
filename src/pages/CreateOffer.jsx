@@ -168,46 +168,46 @@ const ShowOffer = () => {
         }
     };
 
-const saveEditedItem = () => {
-    const updatedItems = [...offerItems];
+    const saveEditedItem = () => {
+        const updatedItems = [...offerItems];
 
-    const editedItem = { ...newItem };
+        const editedItem = { ...newItem };
 
-    const amount = parseFloat(editedItem.Amount || 0);
-    let priceNoTax = 0;
-    let priceTax = 0;
+        const amount = parseFloat(editedItem.Amount || 0);
+        let priceNoTax = 0;
+        let priceTax = 0;
 
-    if (editedItem.TypeItem === 'Materijal') {
-        const selected = materials.find(m => String(m.ID_material) === String(editedItem.ID_material));
-        if (selected) {
-            priceNoTax = parseFloat(selected.SellingPrice || 0) * amount;
-            priceTax = priceNoTax * 1.25;
+        if (editedItem.TypeItem === 'Materijal') {
+            const selected = materials.find(m => String(m.ID_material) === String(editedItem.ID_material));
+            if (selected) {
+                priceNoTax = parseFloat(selected.SellingPrice || 0) * amount;
+                priceTax = priceNoTax * 1.25;
+            }
+        } else if (editedItem.TypeItem === 'Usluga') {
+            const selected = service.find(s => String(s.ID_service) === String(editedItem.ID_service));
+            if (selected) {
+                priceNoTax = parseFloat(selected.PriceNoTax || 0) * amount;
+                priceTax = priceNoTax * 1.25;
+            }
         }
-    } else if (editedItem.TypeItem === 'Usluga') {
-        const selected = service.find(s => String(s.ID_service) === String(editedItem.ID_service));
-        if (selected) {
-            priceNoTax = parseFloat(selected.PriceNoTax || 0) * amount;
-            priceTax = priceNoTax * 1.25;
-        }
-    }
 
-    editedItem.PriceNoTax = priceNoTax;
-    editedItem.PriceTax = priceTax;
+        editedItem.PriceNoTax = priceNoTax;
+        editedItem.PriceTax = priceTax;
 
-    updatedItems[editingIndex] = editedItem;
-    setOfferItems(updatedItems);
-    setEditingIndex(null);
+        updatedItems[editingIndex] = editedItem;
+        setOfferItems(updatedItems);
+        setEditingIndex(null);
 
-    setNewItem({
-        ID_material: '',
-        ID_service: '',
-        TypeItem: '',
-        Amount: '',
-        PriceNoTax: 0,
-        Tax: 25,
-        PriceTax: 0,
-    });
-};
+        setNewItem({
+            ID_material: '',
+            ID_service: '',
+            TypeItem: '',
+            Amount: '',
+            PriceNoTax: 0,
+            Tax: 25,
+            PriceTax: 0,
+        });
+    };
 
 
     const deleteItem = (index) => {
@@ -390,6 +390,16 @@ const saveEditedItem = () => {
                                                 </option>
                                             ))}
                                         </Form.Select>
+                                        {/* Prikaz dostupne količine */}
+                                        {newItem.ID_material && (
+                                            <Form.Text className="text-muted">
+                                                Dostupno na skladištu:{" "}
+                                                {
+                                                    materials.find((m) => String(m.ID_material) === String(newItem.ID_material))?.Amount || 0
+                                                }{" "}
+                                                {materials.find((m) => String(m.ID_material) === String(newItem.ID_material))?.Unit}
+                                            </Form.Text>
+                                        )}
                                     </Form.Group>
                                 </Col>
                             )}

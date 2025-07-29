@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
     ReceiptNumber: {
       type: DataTypes.STRING(20),
       allowNull: false,
-      unique: true,
+      unique: false,
     },
     ID_client: {
       type: DataTypes.INTEGER,

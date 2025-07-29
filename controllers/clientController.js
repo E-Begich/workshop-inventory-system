@@ -19,6 +19,7 @@ const addClient = async (req, res) => {
         ID_client: req.body.ID_client,
         TypeClient: req.body.TypeClient,
         Name: req.body.Name,
+        PersonalNumber: req.body.PersonalNumber,
         ContactName: req.body.ContactName,
         Contact: req.body.Contact,
         Email: req.body.Email,

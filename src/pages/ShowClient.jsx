@@ -7,7 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 const ShowClient = () => {
     const [selectedClientId, setSelectedClientId] = useState(null);
     const [clients, setClients] = useState([]);
-      const [type, setType] = useState([]);
+    const [type, setType] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [searchName, setSearchName] = useState('');
@@ -22,6 +22,7 @@ const ShowClient = () => {
     const [formData, setFormData] = useState({
         TypeClient: '',
         Name: '',
+        PersonalNumber: '',
         ContactName: '',
         Contact: '',
         Email: '',
@@ -45,14 +46,14 @@ const ShowClient = () => {
         }
     };
 
-      const fetchType = async () => {
+    const fetchType = async () => {
         try {
-          const res = await axios.get('/api/aplication/getTypeClientEnum');
-          setType(res.data);
+            const res = await axios.get('/api/aplication/getTypeClientEnum');
+            setType(res.data);
         } catch (error) {
-          console.error('Greška pri dohvaćanju tipa klijenta', error);
+            console.error('Greška pri dohvaćanju tipa klijenta', error);
         }
-      };
+    };
 
     const handleAddClient = async () => {
         if (!isFormValid()) return; // validation
@@ -64,6 +65,7 @@ const ShowClient = () => {
             setFormData({
                 TypeClient: '',
                 Name: '',
+                PersonalNumber: '',
                 ContactName: '',
                 Contact: '',
                 Email: '',
@@ -88,6 +90,7 @@ const ShowClient = () => {
             setFormData({
                 TypeClient: '',
                 Name: '',
+                PersonalNumber: '',
                 ContactName: '',
                 Contact: '',
                 Email: '',
@@ -121,6 +124,7 @@ const ShowClient = () => {
         setFormData({
             TypeClient: '',
             Name: '',
+            PersonalNumber: '',
             ContactName: '',
             Contact: '',
             Email: '',
@@ -145,6 +149,7 @@ const ShowClient = () => {
         setFormData({
             TypeClient: clients.TypeClient || '',
             Name: clients.Name || '',
+            PersonalNumber: clients.PersonalNumber || '',
             ContactName: clients.ContactName || '',
             Contact: clients.Contact || '',
             Email: clients.Email || '',
@@ -197,6 +202,7 @@ const ShowClient = () => {
                             setFormData({
                                 TypeClient: '',
                                 Name: '',
+                                PersonalNumber: '',
                                 ContactName: '',
                                 Contact: '',
                                 Email: '',
@@ -246,6 +252,7 @@ const ShowClient = () => {
                                 { label: 'ID', key: 'ID_client' },
                                 { label: 'Vrsta klijenta', key: 'TypeClient' },
                                 { label: 'Naziv', key: 'Name' },
+                                { label: 'OIB', key: 'PersonalNumber' },
                                 { label: 'Kontakt osoba', key: 'ContactName' },
                                 { label: 'Kontakt', key: 'Contact' },
                                 { label: 'Email', key: 'Email' },
@@ -277,6 +284,7 @@ const ShowClient = () => {
                                 <td>{mat.ID_client}</td>
                                 <td>{mat.TypeClient}</td>
                                 <td>{mat.Name}</td>
+                                <td>{mat.PersonalNumber}</td>
                                 <td>{mat.ContactName}</td>
                                 <td>{mat.Contact}</td>
                                 <td>{mat.Email}</td>
@@ -333,6 +341,7 @@ const ShowClient = () => {
                 setFormData({
                     TypeClient: '',
                     Name: '',
+                    PersonalNumber: '',
                     ContactName: '',
                     Contact: '',
                     Email: '',
@@ -380,6 +389,18 @@ const ShowClient = () => {
                                 onChange={(e) => setFormData({ ...formData, Name: e.target.value })}
                                 disabled={formData.TypeClient === 'Fizička osoba'} // disable ako je Tvrtka
                                 placeholder={formData.TypeClient === 'Fizička osoba' ? 'Nije potrebno za fizičku osobu' : ''}
+                            />
+                        </Form.Group>
+
+                        <Form.Group>
+                            <Form.Label>OIB</Form.Label>
+                            <Form.Control
+                                type="text"
+                                maxLength={11}
+                                value={formData.PersonalNumber}
+                                onChange={(e) => setFormData({ ...formData, PersonalNumber: e.target.value })}
+                                disabled={formData.TypeClient !== 'Tvrtka'} // samo tvrtke ispunjavaju OIB
+                                placeholder={formData.TypeClient !== 'Tvrtka' ? 'Nije potrebno za fizičku osobu' : ''}
                             />
                         </Form.Group>
 

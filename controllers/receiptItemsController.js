@@ -14,24 +14,23 @@ const WarehouseChange = db.WarehouseChange
 
 //1. create user 
 const addReceiptItems = async (req, res) => {
+  try {
+    console.log("Primljene stavke:", req.body);
 
-    let info = {
-        ID_recItems: req.body.ID_recItems,
-        ID_receipt: req.body.ID_receipt,
-        TypeItem: req.body.TypeItem,
-        ID_material: req.body.ID_material,
-        ID_service: req.body.ID_service,
-        Amount: req.body.Amount,
-        PriceNoTax: req.body.PriceNoTax,
-        Tax: req.body.Tax,
-        PriceTax: req.body.PriceTax,
+    const cleanedItems = req.body.map(item => ({
+      ...item,
+      ID_material: item.ID_material || null,
+      ID_service: item.ID_service || null,
+    }));
 
-    }
-
-    const receiptItems = await ReceiptItems.create(info)
-    res.status(200).send(receiptItems)
-    console.log(receiptItems)
-}
+    const receiptItems = await ReceiptItems.bulkCreate(cleanedItems);
+    res.status(200).send(receiptItems);
+    console.log("Spremeljene stavke:", receiptItems);
+  } catch (error) {
+    console.error("Greška pri dodavanju stavki:", error);
+    res.status(500).send({ error: "Došlo je do greške pri spremanju stavki." });
+  }
+};
 
 // 2. Gets all offerItems from table
 const getAllReceiptItems = async (req, res) => {

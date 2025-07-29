@@ -22,6 +22,17 @@ module.exports = (sequelize, DataTypes) => {
         }
       }
     },
+    PersonalNumber: {
+  type: DataTypes.STRING(20),
+  allowNull: true, // općenito je opcionalan
+  validate: {
+    isValidPersonalNumber(value) {
+      if (this.TypeClient === 'Tvrtka' && (!value || value.trim() === '')) {
+        throw new Error('OIB mora biti unesen ako je klijent tipa "Tvrtka".');
+      }
+    }
+  }
+},
     ContactName: {
       type: DataTypes.STRING(100),
       allowNull: false,

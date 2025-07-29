@@ -14,23 +14,31 @@ const WarehouseChange = db.WarehouseChange
 
 //1. create receipt
 const addReceipt = async (req, res) => {
+  try {
+    const receiptNumber = `R-${Date.now()}`; // generiraj broj
 
     let info = {
-        ID_receipt: req.body.ID_receipt,
-        ReceiptNumber: req.body.ReceiptNumber,
-        ID_client: req.body.ID_client,
-        DateCreate: req.body.DateCreate,
-        PriceNoTax: req.body.PriceNoTax,
-        Tax: req.body.Tax,
-        PriceTax: req.body.PriceTax,
-        ID_offer: req.body.ID_offer,
-        ID_user: req.body.ID_user
-    }
+      ReceiptNumber: receiptNumber, // ✅ dodaj ovdje
+      ID_client: req.body.ID_client,
+      DateCreate: req.body.DateCreate,
+      PriceNoTax: req.body.PriceNoTax,
+      Tax: req.body.Tax,
+      PriceTax: req.body.PriceTax,
+      ID_offer: req.body.ID_offer || null,
+      ID_user: req.body.ID_user
+    };
 
-    const receipt = await Receipt.create(info)
-    res.status(200).send(receipt)
-    console.log(receipt)
-}
+    console.log("Finalni receipt info:", info); // za provjeru
+
+    const receipt = await db.Receipt.create(info);
+
+    res.status(201).json(receipt);
+  } catch (error) {
+    console.error("Greška u addReceipt:", error);
+    res.status(500).json({ error: "Greška pri spremanju računa." });
+  }
+};
+
 
 // 2. Gets all users from table
 const getAllReceipt= async (req, res) => {
@@ -85,9 +93,6 @@ const createReceiptFromOffer = async (req, res) => {
     const priceNoTax = offer.OfferItems.reduce((sum, item) => sum + parseFloat(item.PriceNoTax), 0);
     const priceTax = offer.OfferItems.reduce((sum, item) => sum + parseFloat(item.PriceTax), 0);
     const tax = priceTax - priceNoTax;
-
-    // 3. Generiraj broj računa
-    const receiptNumber = `R-${Date.now()}`;
 
     // 4. Kreiraj Receipt
     const receipt = await Receipt.create({

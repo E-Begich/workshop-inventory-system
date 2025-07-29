@@ -13,9 +13,8 @@ const CreateReceipt = () => {
     const [typeEnum, setTypeEnum] = useState([]);
     const [receiptItems, setReceiptItems] = useState([]);
     const [editingIndex, setEditingIndex] = useState(null);
-
     const [form, setForm] = useState({
-        ReceiptNumber: '',
+        // ReceiptNumber: '',
         ID_client: '',
         DateCreate: new Date().toISOString().split('T')[0],
         PriceNoTax: '',
@@ -24,7 +23,6 @@ const CreateReceipt = () => {
         ID_offer: '',
         ID_user: 0,
     });
-
     const [newItem, setNewItem] = useState({
         ID_receipt: '',
         TypeItem: '',
@@ -35,7 +33,6 @@ const CreateReceipt = () => {
         Tax: 25,
         PriceTax: 0,
     });
-
     useEffect(() => {
         fetchClients();
         fetchUsers();
@@ -43,7 +40,6 @@ const CreateReceipt = () => {
         fetchServices();
         fetchTypeItem();
     }, []);
-
     const fetchClients = async () => {
         try {
             const res = await axios.get('/api/aplication/getAllClients');
@@ -52,7 +48,6 @@ const CreateReceipt = () => {
             console.error('Greška pri dohvaćanju klijenata', error);
         }
     };
-
     const fetchUsers = async () => {
         try {
             const res = await axios.get('/api/aplication/getAllUsers');
@@ -61,7 +56,6 @@ const CreateReceipt = () => {
             console.error('Greška pri dohvaćanju korisnika', error);
         }
     };
-
     const fetchMaterials = async () => {
         try {
             const res = await axios.get('/api/aplication/getAllMaterial');
@@ -70,7 +64,6 @@ const CreateReceipt = () => {
             console.error('Greška pri dohvaćanju materijala', error);
         }
     };
-
     const fetchServices = async () => {
         try {
             const res = await axios.get('/api/aplication/getAllService');
@@ -92,19 +85,56 @@ const CreateReceipt = () => {
     };
 
     const handleAddItem = () => {
+        const { ID_material, ID_service, Amount, TypeItem } = newItem;
+
         if (
-            (!newItem.ID_material && !newItem.ID_service) ||
-            (newItem.ID_material && newItem.ID_service) ||
-            !newItem.TypeItem ||
-            !newItem.Amount
+            (!ID_material && !ID_service) ||
+            (ID_material && ID_service) ||
+            !TypeItem ||
+            !Amount
         ) {
             toast.error('Odaberi materijal ili uslugu i unesi količinu.');
             return;
         }
 
-        setReceiptItems([...receiptItems, newItem]);
+        let unitPrice = 0;
+        let taxRate = 25; // default fallback
+
+        if (ID_material) {
+            const material = materials.find(m => m.ID_material == ID_material);
+            if (material) {
+                unitPrice = parseFloat(material.SellingPrice || 0);
+                taxRate = parseFloat(material.Tax || 25);
+                console.log("📦 Pronađen materijal:", material);
+            }
+        } else if (ID_service) {
+            const svc = service.find(s => s.ID_service == ID_service);
+            if (svc) {
+                unitPrice = parseFloat(svc.PriceNoTax || 0);  // ili SellingPrice, ovisno o bazi
+                taxRate = parseFloat(svc.Tax || 25);
+                console.log("🛠️ Pronađena usluga:", svc);
+            }
+        }
+
+        const amount = parseFloat(Amount);
+        const priceNoTax = unitPrice * amount;
+        const priceTax = priceNoTax * (1 + taxRate / 100);
+
+        const itemToAdd = {
+            ...newItem,
+            PriceNoTax: priceNoTax.toFixed(2),
+            PriceTax: priceTax.toFixed(2),
+            Tax: taxRate,
+        };
+
+        console.log("🧾 Novi item:", itemToAdd);
+
+        setReceiptItems([...receiptItems, itemToAdd]);
         resetNewItem();
     };
+
+
+
 
     const resetNewItem = () => {
         setNewItem({
@@ -117,25 +147,6 @@ const CreateReceipt = () => {
             Tax: 25,
             PriceTax: 0,
         });
-    };
-
-    const calculateTotals = () => {
-        let totalNoTax = 0;
-        let totalTax = 0;
-        let totalWithTax = 0;
-
-        receiptItems.forEach(item => {
-            const amount = parseFloat(item.Amount || 0);
-            const priceNoTax = parseFloat(item.PriceNoTax || 0);
-            const tax = parseFloat(item.Tax || 0);
-
-            totalNoTax += priceNoTax;
-            totalTax += priceNoTax * (tax / 100);
-        });
-
-        totalWithTax = totalNoTax + totalTax;
-
-        return { totalNoTax, totalTax, totalWithTax };
     };
 
     const handleSubmitReceipt = async () => {
@@ -165,23 +176,29 @@ const CreateReceipt = () => {
 
         try {
             // Izračun ukupnih vrijednosti
-            let totalNoTax = 0;
-            let totalTax = 0;
+            const totals = receiptItems.reduce(
+                (acc, item) => {
+                    acc.priceNoTax += parseFloat(item.PriceNoTax || 0);  // već je pomnoženo u handleAddItem
+                    acc.priceTax += parseFloat(item.PriceTax || 0);
+                    return acc;
+                },
+                { priceNoTax: 0, priceTax: 0 }
+            );
+            totals.tax = totals.priceTax - totals.priceNoTax;
 
-            receiptItems.forEach(item => {
-                totalNoTax += parseFloat(item.PriceNoTax || 0);
-                totalTax += parseFloat(item.PriceTax || 0);
-            });
+            console.log("Totali koji se šalju u račun:", totals);
 
             // Priprema podataka za kreiranje računa (zaglavlje)
             const receiptData = {
                 ...form,
-                PriceNoTax: totalNoTax,
-                PriceTax: totalTax,
-                Tax: form.Tax || 25,
+                PriceNoTax: totals.priceNoTax.toFixed(2),
+                Tax: totals.tax.toFixed(2),
+                PriceTax: totals.priceTax.toFixed(2),
             };
+            console.log(receiptData);
 
             // 1. Kreiraj račun i dohvati njegov ID
+            console.log(receiptData)
             const res = await axios.post('/api/aplication/addReceipt', receiptData);
             const createdReceiptId = res.data.ID_receipt;
 
@@ -189,8 +206,9 @@ const CreateReceipt = () => {
             const itemsToSend = receiptItems.map(item => ({
                 ...item,
                 ID_receipt: createdReceiptId,
-                Tax: item.Tax ?? 25,
+                Tax: item.Tax ?? 25,  // PDV stopa, ne iznos poreza, to je u redu
             }));
+            console.log("Items to send:", itemsToSend);
 
             // 3. Pošalji stavke na backend
             await axios.post('/api/aplication/addReceiptItem', itemsToSend);
@@ -199,9 +217,9 @@ const CreateReceipt = () => {
 
             // Reset formi i stavki nakon uspješnog spremanja
             setForm({
-                ReceiptNumber: '',
+                //ReceiptNumber: '',
                 ID_client: '',
-                ID_user: 0,
+                ID_user: '',
                 DateCreate: new Date().toISOString().split('T')[0],
                 PriceNoTax: 0,
                 Tax: 25,
@@ -216,38 +234,53 @@ const CreateReceipt = () => {
         }
     };
 
+    const handleSaveEditedItem = () => {
+        const { ID_material, ID_service, Amount, TypeItem } = newItem;
 
-    const calculateItemPrice = (item) => {
-        const amount = parseFloat(item.Amount || 0);
+        if (
+            (!ID_material && !ID_service) ||
+            (ID_material && ID_service) ||
+            !TypeItem ||
+            !Amount
+        ) {
+            toast.error('Odaberi materijal ili uslugu i unesi količinu.');
+            return;
+        }
+
         let unitPrice = 0;
+        let taxRate = 25;
 
-        if (item.TypeItem === 'Materijal') {
-            const selected = materials.find(m => String(m.ID_material) === String(item.ID_material));
-            if (selected) unitPrice = parseFloat(selected.SellingPrice || 0);
-        } else if (item.TypeItem === 'Usluga') {
-            const selected = service.find(s => String(s.ID_service) === String(item.ID_service));
-            if (selected) unitPrice = parseFloat(selected.PriceNoTax || 0);
+        if (ID_material) {
+            const material = materials.find(m => m.ID_material == ID_material);
+            unitPrice = parseFloat(material?.SellingPrice || 0);
+            taxRate = parseFloat(material?.Tax || 25);
+        } else if (ID_service) {
+            const svc = service.find(s => s.ID_service == ID_service);
+            unitPrice = parseFloat(svc?.Price || 0);
+            taxRate = parseFloat(svc?.Tax || 25);
         }
 
+        const amount = parseFloat(Amount || 1);
         const priceNoTax = unitPrice * amount;
-        const priceTax = priceNoTax * 1.25;
+        const priceTax = priceNoTax * (1 + taxRate / 100);
 
-        return { priceNoTax, priceTax };
+        const updatedItem = {
+            ...newItem,
+            PriceNoTax: priceNoTax,
+            PriceTax: priceTax,
+            Tax: taxRate,
+        };
+
+        const updatedItems = [...receiptItems];
+        updatedItems[editingIndex] = updatedItem;
+        setReceiptItems(updatedItems);
+        setEditingIndex(null);
+        resetNewItem();
     };
 
-    const handleEditChange = (key, value) => {
-        const updated = { ...newItem, [key]: value };
 
-        if (key === 'ID_material' || key === 'ID_service' || key === 'Amount' || key === 'TypeItem') {
-            const { priceNoTax, priceTax } = calculateItemPrice(updated);
-            updated.PriceNoTax = priceNoTax;
-            updated.PriceTax = priceTax;
-        }
 
-        setNewItem(updated);
-    };
-
-        const startEditing = (index) => {
+    const startEditing = (index) => {
         setEditingIndex(index);
         setNewItem({ ...receiptItems[index] });
     };
@@ -256,14 +289,32 @@ const CreateReceipt = () => {
         setReceiptItems(receiptItems.filter((_, i) => i !== index));
     };
 
+    const flexRowStyle = {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        marginBottom: '1rem',
+    };
+
+    const selectStyle = {
+        flex: 1,
+    };
+
+    const labelStyle = {
+        minWidth: '100px',
+    };
+
     return (
         <Card className="p-4 mt-4">
             <ToastContainer />
-            <h4>Kreiraj Račun</h4>
+            <h2 className="text-lg font-semibold mb-4">Kreiraj račun</h2>
+
+            <br />
             <Row className="mb-3">
-                <Col>
-                    <Form.Label>Klijent</Form.Label>
-                    <Form.Select value={form.ID_client} onChange={e => setForm({ ...form, ID_client: e.target.value })}>
+                {/* Klijent i gumb u istoj liniji */}
+                <div style={flexRowStyle}>
+                    <Form.Label style={labelStyle}>Klijent</Form.Label>
+                    <Form.Select style={selectStyle} value={form.ID_client} onChange={e => setForm({ ...form, ID_client: e.target.value })}>
                         <option value="">Odaberi klijenta</option>
                         {clients.map(c => (
                             <option key={c.ID_client} value={c.ID_client}>
@@ -276,10 +327,11 @@ const CreateReceipt = () => {
                             Dodaj novog klijenta
                         </Link>
                     </Button>
-                </Col>
-                <Col>
-                    <Form.Label>Zaposlenik</Form.Label>
-                    <Form.Select value={form.ID_user} onChange={e => setForm({ ...form, ID_user: e.target.value })}>
+                </div>
+                {/* Zaposlenik i gumb u istoj liniji */}
+                <div style={flexRowStyle}>
+                    <Form.Label style={labelStyle}>Zaposlenik</Form.Label>
+                    <Form.Select style={selectStyle} value={form.ID_user} onChange={e => setForm({ ...form, ID_user: e.target.value })}>
                         <option value="">Odaberi korisnika</option>
                         {users.map(c => (
                             <option key={c.ID_user} value={c.ID_user}>{c.Name} {c.Lastname}</option>
@@ -290,23 +342,23 @@ const CreateReceipt = () => {
                             Dodaj novog zaposlenika
                         </Link>
                     </Button>
-                </Col>
-                <Col>
-                    <Form.Label>Datum</Form.Label>
+                </div>
+                <div style={flexRowStyle}>
+                    <Form.Label style={labelStyle}>Datum</Form.Label>
                     <Form.Control
                         type="date"
                         value={form.DateCreate}
                         onChange={e => setForm({ ...form, DateCreate: e.target.value })}
                     />
-                </Col>
+                </div>
             </Row>
 
             <hr />
 
             <Row className="mb-3">
-                <Col md={3}>
-                    <Form.Label>Tip stavke</Form.Label>
-                    <Form.Select
+                <Col md={6}>
+                    <Form.Label style={labelStyle}>Tip stavke</Form.Label>
+                    <Form.Select style={selectStyle}
                         value={newItem.TypeItem}
                         onChange={(e) =>
                             setNewItem({
@@ -332,10 +384,10 @@ const CreateReceipt = () => {
                 </Col>
 
                 {newItem.TypeItem === 'Materijal' && (
-                    <Col md={12}>
+                    <Col md={6}>
                         <Form.Group>
-                            <Form.Label>Materijal</Form.Label>
-                            <Form.Select
+                            <Form.Label style={labelStyle}>Materijal</Form.Label>
+                            <Form.Select style={selectStyle}
                                 value={newItem.ID_material}
                                 onChange={(e) => {
                                     const selected = materials.find((m) => String(m.ID_material) === String(e.target.value));
@@ -372,10 +424,10 @@ const CreateReceipt = () => {
                 )}
 
                 {newItem.TypeItem === 'Usluga' && (
-                    <Col md={12}>
+                    <Col md={6}>
                         <Form.Group>
-                            <Form.Label>Usluga</Form.Label>
-                            <Form.Select
+                            <Form.Label style={labelStyle}>Usluga</Form.Label>
+                            <Form.Select style={selectStyle}
                                 value={newItem.ID_service}
                                 onChange={(e) => {
                                     const selected = service.find((s) => String(s.ID_service) === String(e.target.value));
@@ -402,10 +454,9 @@ const CreateReceipt = () => {
                         </Form.Group>
                     </Col>
                 )}
-
-                <Col md={2}>
+                <Col md={6}>
                     <Form.Group>
-                        <Form.Label>Količina</Form.Label>
+                        <Form.Label style={labelStyle}>Količina</Form.Label>
                         <Form.Control
                             type="number"
                             min="0"
@@ -433,96 +484,152 @@ const CreateReceipt = () => {
                 </Col>
             </Row>
             <div className="d-flex justify-content-end">
-                <Button variant="secondary" onClick={editingIndex !== null ? handleEditChange : handleAddItem}>
+                <Button variant="secondary" onClick={editingIndex !== null ? handleSaveEditedItem : handleAddItem}>
                     {editingIndex !== null ? "Spremi izmjene" : "Dodaj stavku"}
                 </Button>
-
             </div>
+            <br />
+            <hr />
+            <h2 className="text-lg font-semibold mb-2">Stavke na računu</h2>
 
+            <br />
             {
                 receiptItems.length > 0 && (
                     <Table bordered>
                         <thead>
                             <tr>
-                        <th>ID</th>
-                        <th>Naziv</th>
-                        <th>Vrsta</th>
-                        <th>Količina</th>
-                        <th>JM</th>
-                        <th>Jedinična cijena bez PDV-a</th>
-                        <th>Jedinična cijena s PDV-om</th>
-                        <th>PDV (%)</th>
-                        <th>Ukupna cijena s PDV-om</th>
-                        <th></th>
+                                <th>ID</th>
+                                <th>Naziv</th>
+                                <th>Vrsta</th>
+                                <th>Količina</th>
+                                <th>JM</th>
+                                <th>Jedinična cijena bez PDV-a</th>
+                                <th>PDV (%)</th>
+                                <th>Jedinična cijena s PDV-om</th>
+                                <th>Iznos PDV-a</th>
+                                <th>Ukupna cijena s PDV-om</th>
+                                <th></th>
                             </tr>
                         </thead>
-                                     <tbody>
-                                         {receiptItems.map((item, index) => {
-                                             let ID = '-';
-                                             let name = '-';
-                                             let type = item.TypeItem;
-                                             let amount = parseFloat(item.Amount || 0);
-                                             let jm = '-';
-                                             let priceNoTax = 0;
-                                             let priceTax = 0;
-                                             let tax = 25;
-                                             let totalPriceTax = 0;
-                     
-                                             if (item.TypeItem === 'Materijal') {
-                                                 const material = materials.find(m => String(m.ID_material) === String(item.ID_material));
-                                                 if (material) {
-                                                     ID = material.ID_material;
-                                                     name = material.NameMaterial;
-                                                     jm = material.Unit;
-                                                     priceNoTax = parseFloat(material.SellingPrice || 0);
-                                                     priceTax = priceNoTax * 1.25; // 25% PDV
-                                                     totalPriceTax = priceTax * amount;
-                                                 }
-                                             } else if (item.TypeItem === 'Usluga') {
-                                                 const serviceItem = service.find(s => String(s.ID_service) === String(item.ID_service));
-                                                 if (serviceItem) {
-                                                     ID = serviceItem.ID_service;
-                                                     name = serviceItem.Name;
-                                                     jm = 'usluga';
-                                                     priceNoTax = parseFloat(serviceItem.PriceNoTax || 0);
-                                                     priceTax = parseFloat(serviceItem.PriceTax || 0);
-                                                     tax = parseFloat(serviceItem.Tax || 25);
-                                                     totalPriceTax = priceTax * amount;
-                                                 }
-                                             }
-                     
-                                             return (
-                                                 <tr key={index}>
-                                                     <td>{ID}</td>
-                                                     <td>{name}</td>
-                                                     <td>{type}</td>
-                                                     <td>{amount}</td>
-                                                     <td>{jm}</td>
-                                                     <td>{priceNoTax.toFixed(2)} €</td>
-                                                     <td>{priceTax.toFixed(2)} €</td>
-                                                     <td>{tax}%</td>
-                                                     <td>{totalPriceTax.toFixed(2)} €</td>
-                                                     <td>
-                                                         <Button
-                                                             size="sm"
-                                                             variant="warning"
-                                                             className="me-2"
-                                                             onClick={() => startEditing(index)}
-                                                         >
-                                                             Uredi
-                                                         </Button>
-                                                         <Button
-                                                             size="sm"
-                                                             variant="danger"
-                                                             onClick={() => deleteItem(index)}
-                                                         >
-                                                             Obriši
-                                                         </Button>
-                                                     </td>
-                                                 </tr>
-                                             );
-                                         })}
-                                     </tbody>
+                        <tbody>
+                            {receiptItems.map((item, index) => {
+                                let ID = '-';
+                                let name = '-';
+                                let type = item.TypeItem;
+                                let amount = parseFloat(item.Amount || 0);
+                                let jm = '-';
+                                let priceNoTax = 0;
+                                let priceTax = 0;
+                                let tax = 25;
+
+                                if (type === 'Materijal') {
+                                    const material = materials.find(m => String(m.ID_material) === String(item.ID_material));
+                                    if (material) {
+                                        ID = material.ID_material;
+                                        name = material.NameMaterial;
+                                        jm = material.Unit;
+                                        priceNoTax = parseFloat(material.SellingPrice || 0);
+                                        tax = 25;
+                                        priceTax = priceNoTax * (1 + tax / 100);
+                                    }
+                                } else if (type === 'Usluga') {
+                                    const serviceItem = service.find(s => String(s.ID_service) === String(item.ID_service));
+                                    if (serviceItem) {
+                                        ID = serviceItem.ID_service;
+                                        name = serviceItem.Name;
+                                        jm = 'usluga';
+                                        priceNoTax = parseFloat(serviceItem.PriceNoTax || 0);
+                                        priceTax = parseFloat(serviceItem.PriceTax || 0);
+                                        tax = parseFloat(serviceItem.Tax || 25);
+                                    }
+                                }
+
+                                const totalNoTax = priceNoTax * amount;
+                                const totalTax = (priceTax - priceNoTax) * amount;
+                                const totalPriceTax = totalNoTax + totalTax;
+
+                                return (
+                                    <tr key={index}>
+                                        <td>{ID}</td>
+                                        <td>{name}</td>
+                                        <td>{type}</td>
+                                        <td>{amount}</td>
+                                        <td>{jm}</td>
+                                        <td>{priceNoTax.toFixed(2)}</td>
+                                        <td>{tax}%</td>
+                                        <td>{priceTax.toFixed(2)}</td>
+                                        <td>{totalTax.toFixed(2)}</td>
+                                        <td>{totalPriceTax.toFixed(2)}</td>
+                                        <td>
+
+                                            <Button
+                                                size="sm"
+                                                variant="warning"
+                                                className="me-2"
+                                                onClick={() => startEditing(index)}
+                                            >
+                                                Uredi
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="danger"
+                                                onClick={() => deleteItem(index)}
+                                            >
+                                                Obriši
+                                            </Button>
+
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+
+                        {/* Ukupni zbrojevi ispod tablice */}
+                        <tfoot>
+                            {(() => {
+                                let totalNoTax = 0;
+                                let totalTax = 0;
+                                let totalWithTax = 0;
+
+                                receiptItems.forEach(item => {
+                                    let amount = parseFloat(item.Amount || 0);
+                                    let priceNoTax = 0;
+                                    let priceTax = 0;
+
+                                    if (item.TypeItem === 'Materijal') {
+                                        const material = materials.find(m => String(m.ID_material) === String(item.ID_material));
+                                        if (material) {
+                                            priceNoTax = parseFloat(material.SellingPrice || 0);
+                                            priceTax = priceNoTax * 1.25;
+                                        }
+                                    } else if (item.TypeItem === 'Usluga') {
+                                        const serviceItem = service.find(s => String(s.ID_service) === String(item.ID_service));
+                                        if (serviceItem) {
+                                            priceNoTax = parseFloat(serviceItem.PriceNoTax || 0);
+                                            priceTax = parseFloat(serviceItem.PriceTax || 0);
+                                        }
+                                    }
+
+                                    totalNoTax += priceNoTax * amount;
+                                    totalTax += (priceTax - priceNoTax) * amount;
+                                    totalWithTax += priceTax * amount;
+                                });
+
+                                return (
+                                    <tr style={{ fontWeight: 'bold', backgroundColor: '#f0f0f0' }}>
+                                        <td colSpan={5} style={{ textAlign: 'right' }}>Ukupno bez PDV-a:</td>
+                                        <td>{totalNoTax.toFixed(2)} €</td>
+                                        <td style={{ textAlign: 'right' }}>PDV:</td>
+                                        <td>{totalTax.toFixed(2)} €</td>
+                                        <td style={{ textAlign: 'right' }}>Ukupno:</td>
+                                        <td>{totalWithTax.toFixed(2)} €</td>
+                                        {/* Zadnja kolona za gumb ostaje prazna */}
+                                        <td></td>
+                                    </tr>
+                                );
+                            })()}
+                        </tfoot>
+
                     </Table>
                 )
             }

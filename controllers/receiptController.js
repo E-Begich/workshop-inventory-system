@@ -25,7 +25,8 @@ const addReceipt = async (req, res) => {
       Tax: req.body.Tax,
       PriceTax: req.body.PriceTax,
       ID_offer: req.body.ID_offer || null,
-      ID_user: req.body.ID_user
+      ID_user: req.body.ID_user,
+      PaymentMethod: req.body.PaymentMethod
     };
 
     console.log("Finalni receipt info:", info); // za provjeru
@@ -103,7 +104,8 @@ const createReceiptFromOffer = async (req, res) => {
       Tax: tax,
       PriceTax: priceTax,
       ID_offer: ID_offer,
-      ID_user: ID_user
+      ID_user: ID_user,
+      PaymentMethod: PaymentMethod
     });
 
     // 5. Kreiraj stavke (ReceiptItems)
@@ -127,6 +129,12 @@ const createReceiptFromOffer = async (req, res) => {
   }
 };
 
+// 6. Get enum values for Type
+const getPaymentEnum = (req, res) => {
+  const paymentEnum = Receipt.rawAttributes.PaymentMethod.values;
+  res.status(200).json(paymentEnum);
+};
+
 
 module.exports = {
     addReceipt,
@@ -134,5 +142,6 @@ module.exports = {
     getOneReceipt,
     updateReceipt,
     deleteReceipt,
-    createReceiptFromOffer
+    createReceiptFromOffer,
+    getPaymentEnum,
 }

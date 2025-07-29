@@ -26,6 +26,18 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DATEONLY,
       allowNull: false,
     },
+      PriceNoTax: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+    },
+    Tax: {
+      type: DataTypes.DECIMAL(5, 2), // npr. 25.00 za 25%
+      allowNull: false,
+    },
+    PriceTax: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+    },
     ID_user: {
       type: DataTypes.INTEGER,
       allowNull: true,

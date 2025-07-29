@@ -1,3 +1,4 @@
+const { TABLOCKX } = require('sequelize/lib/table-hints')
 const db = require('../models')
 
 //creating main models
@@ -20,6 +21,9 @@ const addOffer = async (req, res) => {
         ID_client: req.body.ID_client,
         DateCreate: req.body.DateCreate,
         DateEnd: req.body.DateEnd,
+        PriceNoTax: req.body.PriceNoTax,
+        Tax: req.body.Tax,
+        PriceTax: req.body.PriceTax,
         ID_user: req.body.ID_user,
     }
 

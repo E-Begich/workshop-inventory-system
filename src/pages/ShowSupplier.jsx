@@ -22,6 +22,7 @@ const ShowSuppliers = () => {
   const [formData, setFormData] = useState({
     Type: '',
     Name: '',
+    PersonalNumber: '',
     ContactName: '',
     Contact: '',
     Email: '',
@@ -64,6 +65,7 @@ const ShowSuppliers = () => {
       setFormData({
         Type: '',
         Name: '',
+        PersonalNumber: '',
         ContactName: '',
         Contact: '',
         Email: '',
@@ -88,6 +90,7 @@ const ShowSuppliers = () => {
       setFormData({
         Type: '',
         Name: '',
+        PersonalNumber: '',
         ContactName: '',
         Contact: '',
         Email: '',
@@ -121,6 +124,7 @@ const ShowSuppliers = () => {
     setFormData({
       Type: '',
       Name: '',
+      PersonalNumber: '',
       ContactName: '',
       Contact: '',
       Email: '',
@@ -146,6 +150,7 @@ const ShowSuppliers = () => {
     setFormData({
       Type: supplier.Type || '',
       Name: supplier.Name || '',
+      PersonalNumber: supplier.PersonalNumber || '',
       ContactName: supplier.ContactName || '',
       Contact: supplier.Contact || '',
       Email: supplier.Email || '',
@@ -199,6 +204,7 @@ const ShowSuppliers = () => {
               setFormData({
                 Type: '',
                 Name: '',
+                PersonalNumber: '',
                 ContactName: '',
                 Contact: '',
                 Email: '',
@@ -248,6 +254,7 @@ const ShowSuppliers = () => {
                 { label: 'ID', key: 'ID_supplier' },
                 { label: 'Vrsta klijenta', key: 'Type' },
                 { label: 'Naziv', key: 'Name' },
+                { label: 'OIB', key: 'PersonalNumber' },
                 { label: 'Kontakt osoba', key: 'ContactName' },
                 { label: 'Kontakt', key: 'Contact' },
                 { label: 'Email', key: 'Email' },
@@ -279,6 +286,7 @@ const ShowSuppliers = () => {
                 <td>{mat.ID_supplier}</td>
                 <td>{mat.Type}</td>
                 <td>{mat.Name}</td>
+                <td>{mat.PersonalNumber}</td>
                 <td>{mat.ContactName}</td>
                 <td>{mat.Contact}</td>
                 <td>{mat.Email}</td>
@@ -287,15 +295,15 @@ const ShowSuppliers = () => {
                 <td>{mat.PostalCode}</td>
                 <td>{mat.Country}</td>
 
-                    <td style={{ whiteSpace: 'nowrap' }}>
-                      <Button variant="warning" size="sm" className="me-2" onClick={() => openEditModal(mat)}>Uredi</Button>
-                      <Button variant="danger" size="sm" onClick={() => {
-                        setDeleteId(mat.ID_supplier);
-                        setShowDeleteConfirm(true);
-                      }}>
-                        Obriši
-                      </Button>
-                    </td>
+                <td style={{ whiteSpace: 'nowrap' }}>
+                  <Button variant="warning" size="sm" className="me-2" onClick={() => openEditModal(mat)}>Uredi</Button>
+                  <Button variant="danger" size="sm" onClick={() => {
+                    setDeleteId(mat.ID_supplier);
+                    setShowDeleteConfirm(true);
+                  }}>
+                    Obriši
+                  </Button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -335,6 +343,7 @@ const ShowSuppliers = () => {
         setFormData({
           Type: '',
           Name: '',
+          PersonalNumber: '',
           ContactName: '',
           Contact: '',
           Email: '',
@@ -361,7 +370,7 @@ const ShowSuppliers = () => {
                   setFormData(prev => ({
                     ...prev,
                     Type: selectedType,
-                    Name: selectedType === 'Tvrtka' ? '' : prev.Name  // opcionalno: očisti Name
+                    Name: selectedType === 'Tvrtka' ? '' : prev.Name,  // opcionalno: očisti Name
                   }));
                 }}
               >
@@ -380,8 +389,20 @@ const ShowSuppliers = () => {
                 type="text"
                 value={formData.Name}
                 onChange={(e) => setFormData({ ...formData, Name: e.target.value })}
-                disabled={formData.Type === 'Fizička osoba'} // disable ako je Tvrtka
-                placeholder={formData.Type === 'Fizička osoba' ? 'Nije potrebno za fizičku osobu' : ''}
+                disabled={formData.Type !== 'Tvrtka'}  // ✅ samo tvrtke mogu unositi
+                placeholder={formData.Type !== 'Tvrtka' ? 'Nije potrebno za fizičku osobu' : ''}
+              />
+            </Form.Group>
+
+            <Form.Group>
+              <Form.Label>OIB</Form.Label>
+              <Form.Control
+                type="text"
+                maxLength={11}
+                value={formData.PersonalNumber}
+                onChange={(e) => setFormData({ ...formData, PersonalNumber: e.target.value })}
+                disabled={formData.Type !== 'Tvrtka'} // ✅ isto kao iznad
+                placeholder={formData.Type !== 'Tvrtka' ? 'Nije potrebno za fizičku osobu' : ''}
               />
             </Form.Group>
 

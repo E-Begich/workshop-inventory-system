@@ -368,7 +368,7 @@ const ShowClient = () => {
                                     setFormData(prev => ({
                                         ...prev,
                                         TypeClient: selectedType,
-                                        Name: selectedType === 'Tvrtka' ? '' : prev.Name  // opcionalno: očisti Name
+                                        Name: selectedType === 'Tvrtka' ? '' : prev.Name,  // opcionalno: očisti Name
                                     }));
                                 }}
                             >
@@ -380,15 +380,14 @@ const ShowClient = () => {
                                 ))}
                             </Form.Select>
                         </Form.Group>
-
                         <Form.Group>
                             <Form.Label>Naziv</Form.Label>
                             <Form.Control
                                 type="text"
                                 value={formData.Name}
                                 onChange={(e) => setFormData({ ...formData, Name: e.target.value })}
-                                disabled={formData.TypeClient === 'Fizička osoba'} // disable ako je Tvrtka
-                                placeholder={formData.TypeClient === 'Fizička osoba' ? 'Nije potrebno za fizičku osobu' : ''}
+                                disabled={formData.TypeClient !== 'Tvrtka'} // ✅ samo za Tvrtka
+                                placeholder={formData.TypeClient !== 'Tvrtka' ? 'Nije potrebno za fizičku osobu' : ''}
                             />
                         </Form.Group>
 
@@ -399,7 +398,7 @@ const ShowClient = () => {
                                 maxLength={11}
                                 value={formData.PersonalNumber}
                                 onChange={(e) => setFormData({ ...formData, PersonalNumber: e.target.value })}
-                                disabled={formData.TypeClient !== 'Tvrtka'} // samo tvrtke ispunjavaju OIB
+                                disabled={formData.TypeClient !== 'Tvrtka'} // ✅ isto pravilo
                                 placeholder={formData.TypeClient !== 'Tvrtka' ? 'Nije potrebno za fizičku osobu' : ''}
                             />
                         </Form.Group>

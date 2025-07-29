@@ -59,6 +59,10 @@ module.exports = (sequelize, DataTypes) => {
       onUpdate: 'CASCADE',
       onDelete: 'RESTRICT',
     },
+    PaymentMethod: {
+      type: DataTypes.ENUM('Gotovina', 'Kartica'),
+      allowNull: true, // ili false, ovisno o tvojoj potrebi
+    },
   }, {
     timestamps: false,
   });
@@ -74,10 +78,10 @@ module.exports = (sequelize, DataTypes) => {
       as: 'Client'
     })
 
-  Receipt.belongsTo(models.User, {
-    foreignKey: 'ID_user',
-    as: 'User'
-  });
+    Receipt.belongsTo(models.User, {
+      foreignKey: 'ID_user',
+      as: 'User'
+    });
 
     Receipt.hasMany(models.ReceiptItems, {
       foreignKey: 'ID_receipt',

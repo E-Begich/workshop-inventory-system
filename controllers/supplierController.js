@@ -19,6 +19,7 @@ const addSupplier = async (req, res) => {
         ID_supplier: req.body.ID_supplier,
         Type: req.body.Type,
         Name: req.body.Name,
+        PersonalNumber: req.body.PersonalNumber,
         ContactName: req.body.ContactName,
         Contact: req.body.Contact,
         Email: req.body.Email,

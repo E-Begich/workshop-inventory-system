@@ -11,6 +11,7 @@ const CreateReceipt = () => {
     const [clients, setClients] = useState([]);
     const [users, setUsers] = useState([]);
     const [typeEnum, setTypeEnum] = useState([]);
+    const [payment, setPayment] = useState([]);
     const [receiptItems, setReceiptItems] = useState([]);
     const [editingIndex, setEditingIndex] = useState(null);
     const [form, setForm] = useState({
@@ -22,6 +23,7 @@ const CreateReceipt = () => {
         PriceTax: 0,
         ID_offer: '',
         ID_user: 0,
+        PaymentMethod: '',
     });
     const [newItem, setNewItem] = useState({
         ID_receipt: '',
@@ -39,6 +41,7 @@ const CreateReceipt = () => {
         fetchMaterials();
         fetchServices();
         fetchTypeItem();
+        fetchPayment();
     }, []);
     const fetchClients = async () => {
         try {
@@ -81,6 +84,15 @@ const CreateReceipt = () => {
         } catch (error) {
             console.error('Greška pri dohvaćanju', error);
 
+        }
+    };
+
+    const fetchPayment = async () => {
+        try {
+            const res = await axios.get('/api/aplication/getPaymentEnum');
+            setPayment(res.data);
+        } catch (error) {
+            console.error('Greška pri dohvaćanju načina plaćanja', error);
         }
     };
 
@@ -132,9 +144,6 @@ const CreateReceipt = () => {
         setReceiptItems([...receiptItems, itemToAdd]);
         resetNewItem();
     };
-
-
-
 
     const resetNewItem = () => {
         setNewItem({
@@ -225,6 +234,7 @@ const CreateReceipt = () => {
                 Tax: 25,
                 PriceTax: 0,
                 ID_offer: '',
+                PaymentMethod: '',
             });
             setReceiptItems([]);
 
@@ -488,6 +498,22 @@ const CreateReceipt = () => {
                     {editingIndex !== null ? "Spremi izmjene" : "Dodaj stavku"}
                 </Button>
             </div>
+            <hr />
+            <Form.Group>
+                <Form.Label>Način plaćanja</Form.Label>
+                <Form.Control
+                    as="select"
+                    value={form.PaymentMethod}
+                    onChange={(e) => setForm({ ...form, PaymentMethod: e.target.value })}
+                >
+                    <option value="">Odaberi način plaćanja</option>
+                    {payment.map((loc) => (
+                        <option key={loc} value={loc}>
+                            {loc}
+                        </option>
+                    ))}
+                </Form.Control>
+            </Form.Group>
             <br />
             <hr />
             <h2 className="text-lg font-semibold mb-2">Stavke na računu</h2>
@@ -616,16 +642,23 @@ const CreateReceipt = () => {
                                 });
 
                                 return (
-                                    <tr style={{ fontWeight: 'bold', backgroundColor: '#f0f0f0' }}>
-                                        <td colSpan={5} style={{ textAlign: 'right' }}>Ukupno bez PDV-a:</td>
-                                        <td>{totalNoTax.toFixed(2)} €</td>
-                                        <td style={{ textAlign: 'right' }}>PDV:</td>
-                                        <td>{totalTax.toFixed(2)} €</td>
-                                        <td style={{ textAlign: 'right' }}>Ukupno:</td>
-                                        <td>{totalWithTax.toFixed(2)} €</td>
-                                        {/* Zadnja kolona za gumb ostaje prazna */}
-                                        <td></td>
-                                    </tr>
+                                    <>
+                                        <tr style={{ fontWeight: 'bold', backgroundColor: '#f0f0f0' }}>
+                                            <td colSpan={5} style={{ textAlign: 'right' }}>Ukupno bez PDV-a:</td>
+                                            <td>{totalNoTax.toFixed(2)} €</td>
+                                            <td style={{ textAlign: 'right' }}>PDV:</td>
+                                            <td>{totalTax.toFixed(2)} €</td>
+                                            <td style={{ textAlign: 'right' }}>Ukupno:</td>
+                                            <td>{totalWithTax.toFixed(2)} €</td>
+                                            <td></td>
+                                        </tr>
+                                        <tr style={{ backgroundColor: '#f9f9f9' }}>
+                                            <td colSpan={10} style={{ textAlign: 'right', fontStyle: 'italic' }}>
+                                                Način plaćanja: <strong>{form.PaymentMethod || 'Nije odabrano'}</strong>
+                                            </td>
+                                            <td></td>
+                                        </tr>
+                                    </>
                                 );
                             })()}
                         </tfoot>

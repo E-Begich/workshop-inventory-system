@@ -310,7 +310,6 @@ const ShowMaterials = () => {
                 <td>{mat.TypeChange}</td>
                 <td>{(parseFloat(mat.PurchasePrice) * parseFloat(mat.Amount)).toFixed(2)}</td>
                 <td>{(parseFloat(mat.SellingPrice) * parseFloat(mat.Amount)).toFixed(2)}</td>
-                <td>
                   <td style={{ whiteSpace: 'nowrap' }}>
                     <Button variant="warning" size="sm" className="me-2" onClick={() => openEditModal(mat)}>Uredi</Button>
                     <Button variant="danger" size="sm" onClick={() => {
@@ -320,7 +319,6 @@ const ShowMaterials = () => {
                       Obriši
                     </Button>
                   </td>
-                </td>
               </tr>
             ))}
           </tbody>

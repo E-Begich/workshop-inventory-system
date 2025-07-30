@@ -306,7 +306,7 @@ const ShowOffer = () => {
     };
 
     return (
-        <div className="container-fluid px-2 mt-4">
+        <Card className="p-4 mt-4">
             <h2 className="text-lg font-semibold mb-4">Izrada ponude</h2>
             <br />
             {/* Klijent i gumb u istoj liniji */}
@@ -642,12 +642,13 @@ const ShowOffer = () => {
                 </tfoot>
             </Table>
 
-
+            <div className="text-end mt-3">
             <Button variant="danger" onClick={handleSubmitOffer} className="ms-3">
                 Kreiraj ponudu
             </Button>
             <ToastContainer position="top-right" autoClose={3000} hideProgressBar newestOnTop />
-        </div>
+            </div>
+        </Card>
     )
 }
 

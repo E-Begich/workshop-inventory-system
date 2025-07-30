@@ -668,7 +668,7 @@ const CreateReceipt = () => {
             }
 
             <div className="text-end mt-3">
-                <Button variant="success" onClick={handleSubmitReceipt}>Spremi račun</Button>
+                <Button variant="danger" onClick={handleSubmitReceipt} className="ms-3">Spremi račun</Button>
             </div>
         </Card >
     );

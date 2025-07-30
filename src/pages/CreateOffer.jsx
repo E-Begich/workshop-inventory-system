@@ -10,15 +10,19 @@ const ShowOffer = () => {
     const [materials, setMaterials] = useState([]);
     const [service, setService] = useState([]);
     const [clients, setClients] = useState([]);
+    const [users, setUsers] = useState([]);
     const [typeEnum, setTypeEnum] = useState([]);
+    const [offerItems, setOfferItems] = useState([]);
+    const [editingIndex, setEditingIndex] = useState(null); // indeks stavke koja se uređuje
     const [form, setForm] = useState({
         ID_client: '',
         ID_user: '',
         DateCreate: new Date().toISOString().split('T')[0],
         DateEnd: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        PriceNoTax: '',
+        Tax: 25,
+        PriceTax: 0,
     });
-    const [users, setUsers] = useState([]);
-    const [offerItems, setOfferItems] = useState([]);
     const [newItem, setNewItem] = useState({
         ID_material: '',
         ID_service: '',
@@ -28,7 +32,6 @@ const ShowOffer = () => {
         Tax: 25,
         PriceTax: 0,
     });
-    const [editingIndex, setEditingIndex] = useState(null); // indeks stavke koja se uređuje
 
 
     const today = () => new Date().toISOString().split('T')[0];
@@ -90,25 +93,56 @@ const ShowOffer = () => {
         }
     };
 
-    const startEditing = (index) => {
-        setEditingIndex(index);
-        setNewItem({ ...offerItems[index] });
-    };
-
     const handleAddItem = () => {
+        const { ID_material, ID_service, Amount, TypeItem } = newItem;
         // Validacija
         if (
-            (!newItem.ID_material && !newItem.ID_service) ||
-            (newItem.ID_material && newItem.ID_service) ||
-            !newItem.TypeItem ||
-            !newItem.Amount
+            (!ID_material && !ID_service) ||
+            (ID_material && ID_service) ||
+            !TypeItem ||
+            !Amount
         ) {
-            //alert("Odaberi materijal ili uslugu!");
-            toast.error('Odaberi materijal ili uslugu!');
+            toast.error('Odaberi materijal ili uslugu i unesi količinu.');
             return;
         }
 
-        setOfferItems([...offerItems, newItem]);
+        let unitPrice = 0;
+        let taxRate = 25; // default fallback
+
+        if (ID_material) {
+            const material = materials.find(m => m.ID_material == ID_material);
+            if (material) {
+                unitPrice = parseFloat(material.SellingPrice || 0);
+                taxRate = parseFloat(material.Tax || 25);
+                console.log("📦 Pronađen materijal:", material);
+            }
+        } else if (ID_service) {
+           const svc = service.find(s => s.ID_service == ID_service);
+            if (svc) {
+                unitPrice = parseFloat(svc.PriceNoTax || 0);  // ili SellingPrice, ovisno o bazi
+                taxRate = parseFloat(svc.Tax || 25);
+                console.log("🛠️ Pronađena usluga:", svc);
+            }
+        }
+
+        const amount = parseFloat(Amount);
+        const priceNoTax = unitPrice * amount;
+        const priceTax = priceNoTax * (1 + taxRate / 100);
+
+        const itemToAdd = {
+            ...newItem,
+            PriceNoTax: priceNoTax.toFixed(2),
+            PriceTax: priceTax.toFixed(2),
+            Tax: taxRate,
+        };
+
+        console.log("🧾 Novi item:", itemToAdd);
+
+        setOfferItems([...offerItems, itemToAdd]);
+        resetNewItem();
+    };
+
+    const resetNewItem = () => {
         setNewItem({
             ID_material: '',
             ID_service: '',
@@ -121,110 +155,139 @@ const ShowOffer = () => {
     };
 
     const handleSubmitOffer = async () => {
-        // console.log('Šaljem stavke:', offerItems);
-
         for (const item of offerItems) {
             if (!item.TypeItem || !item.Amount || (!item.ID_material && !item.ID_service)) {
-                // alert('Jedna ili više stavki su nepotpune.');
                 toast.error('Jedna ili više stavki su nepotpune.');
                 return;
             }
         }
 
-        // ✅ Validacija forme (klijent, zaposlenik, datumi)
         if (!form.ID_client || !form.ID_user || !form.DateCreate || !form.DateEnd) {
             toast.error('Molimo ispunite sva polja u formi.');
             return;
         }
 
+        for (const item of offerItems) {
+            if (
+                !item.TypeItem ||
+                !item.Amount ||
+                Number(item.Amount) <= 0 ||
+                (!item.ID_material && !item.ID_service)
+            ) {
+                toast.error('Jedna ili više stavki su nepotpune ili imaju neispravan iznos.');
+                return;
+            }
+        }
 
         try {
-            // 1. Kreiraj ponudu i dohvati ID
-            const res = await axios.post('/api/aplication/addOffer', form);
+            // Izračun ukupnih vrijednosti
+            const totals = offerItems.reduce(
+                (acc, item) => {
+                    acc.priceNoTax += parseFloat(item.PriceNoTax || 0);  // već je pomnoženo u handleAddItem
+                    acc.priceTax += parseFloat(item.PriceTax || 0);
+                    return acc;
+                },
+                { priceNoTax: 0, priceTax: 0 }
+            );
+            totals.tax = totals.priceTax - totals.priceNoTax;
+
+            console.log("Totali koji se šalju u ponudu:", totals);
+
+            // ✅ 2. Spoji totals u form prije slanja
+            const offerData = {
+                ...form,
+                PriceNoTax: totals.priceNoTax.toFixed(2),
+                Tax: totals.tax.toFixed(2),
+                PriceTax: totals.priceTax.toFixed(2),
+            };
+            console.log(offerData);
+
+            // ✅ 3. Kreiraj ponudu i dohvati ID
+            console.log(offerData)
+            const res = await axios.post('/api/aplication/addOffer', offerData);
             const createdOfferId = res.data.ID_offer;
 
-            // 2. Prije slanja offerItems, mapiraj ih i osiguraj Tax
+            // ✅ 4. Pripremi stavke
             const itemsToSend = offerItems.map(item => ({
                 ...item,
-                Tax: item.Tax ?? 25,  // ako Tax nije postavljen, stavi 25
+                Tax: item.Tax ?? 25,
                 ID_offer: createdOfferId,
             }));
+            console.log("Items to send:", itemsToSend);
 
-            // 3. Pošalji stavke na backend
+            // ✅ 5. Spremi stavke
             await axios.post('/api/aplication/addOfferItems', itemsToSend);
 
             toast.success('Ponuda uspješno kreirana!');
-            // reset formi itd...
-            setOfferItems([]);
+
             setForm({
                 ID_client: '',
                 ID_user: '',
                 DateCreate: today(),
                 DateEnd: addDays(15),
             });
-        } catch (err) {
-            console.error('Greška:', err);
-            toast.error('Greška pri spremanju ponude!');
+
+            setOfferItems([]);
+
+        } catch (error) {
+            console.error('Greška pri spremanju ponude:', error);
+            toast.error('Došlo je do greške pri spremanju ponude.');
         }
     };
+
 
     const saveEditedItem = () => {
-        const updatedItems = [...offerItems];
+        const { ID_material, ID_service, Amount, TypeItem } = newItem;
 
-        const editedItem = { ...newItem };
-
-        const amount = parseFloat(editedItem.Amount || 0);
-        let priceNoTax = 0;
-        let priceTax = 0;
-
-        if (editedItem.TypeItem === 'Materijal') {
-            const selected = materials.find(m => String(m.ID_material) === String(editedItem.ID_material));
-            if (selected) {
-                priceNoTax = parseFloat(selected.SellingPrice || 0) * amount;
-                priceTax = priceNoTax * 1.25;
-            }
-        } else if (editedItem.TypeItem === 'Usluga') {
-            const selected = service.find(s => String(s.ID_service) === String(editedItem.ID_service));
-            if (selected) {
-                priceNoTax = parseFloat(selected.PriceNoTax || 0) * amount;
-                priceTax = priceNoTax * 1.25;
-            }
+        if (
+            (!ID_material && !ID_service) ||
+            (ID_material && ID_service) ||
+            !TypeItem ||
+            !Amount
+        ) {
+            toast.error('Odaberi materijal ili uslugu i unesi količinu.');
+            return;
         }
 
-        editedItem.PriceNoTax = priceNoTax;
-        editedItem.PriceTax = priceTax;
+        let unitPrice = 0;
+        let taxRate = 25;
 
-        updatedItems[editingIndex] = editedItem;
+        if (ID_material) {
+            const material = materials.find(m => m.ID_material == ID_material);
+            unitPrice = parseFloat(material?.SellingPrice || 0);
+            taxRate = parseFloat(material?.Tax || 25);
+        } else if (ID_service) {
+            const svc = service.find(s => s.ID_service == ID_service);
+            unitPrice = parseFloat(svc?.PriceNoTax || 0);
+            taxRate = parseFloat(svc?.Tax || 25);
+        }
+
+        const amount = parseFloat(Amount || 1);
+        const priceNoTax = unitPrice * amount;
+        const priceTax = priceNoTax * (1 + taxRate / 100);
+
+        const updatedItem = {
+            ...newItem,
+            PriceNoTax: priceNoTax,
+            PriceTax: priceTax,
+            Tax: taxRate,
+        };
+
+        const updatedItems = [...offerItems];
+        updatedItems[editingIndex] = updatedItem;
+
         setOfferItems(updatedItems);
         setEditingIndex(null);
-
-        setNewItem({
-            ID_material: '',
-            ID_service: '',
-            TypeItem: '',
-            Amount: '',
-            PriceNoTax: 0,
-            Tax: 25,
-            PriceTax: 0,
-        });
+        resetNewItem();
     };
 
+    const startEditing = (index) => {
+        setEditingIndex(index);
+        setNewItem({ ...offerItems[index] });
+    };
 
     const deleteItem = (index) => {
-        const updatedItems = offerItems.filter((_, i) => i !== index);
-        setOfferItems(updatedItems);
-        if (editingIndex === index) {
-            setEditingIndex(null);
-            setNewItem({
-                ID_material: '',
-                ID_service: '',
-                TypeItem: '',
-                Amount: '',
-                PriceNoTax: 0,
-                Tax: 25,
-                PriceTax: 0,
-            });
-        }
+        setOfferItems(offerItems.filter((_, i) => i !== index));
     };
 
     const flexRowStyle = {
@@ -455,8 +518,9 @@ const ShowOffer = () => {
                         <th>Količina</th>
                         <th>JM</th>
                         <th>Jedinična cijena bez PDV-a</th>
-                        <th>Jedinična cijena s PDV-om</th>
                         <th>PDV (%)</th>
+                        <th>Jedinična cijena s PDV-om</th>
+                        <th>Iznos PDV-a</th>
                         <th>Ukupna cijena s PDV-om</th>
                         <th></th>
                     </tr>
@@ -471,7 +535,6 @@ const ShowOffer = () => {
                         let priceNoTax = 0;
                         let priceTax = 0;
                         let tax = 25;
-                        let totalPriceTax = 0;
 
                         if (item.TypeItem === 'Materijal') {
                             const material = materials.find(m => String(m.ID_material) === String(item.ID_material));
@@ -480,8 +543,8 @@ const ShowOffer = () => {
                                 name = material.NameMaterial;
                                 jm = material.Unit;
                                 priceNoTax = parseFloat(material.SellingPrice || 0);
-                                priceTax = priceNoTax * 1.25; // 25% PDV
-                                totalPriceTax = priceTax * amount;
+                                tax = 25;
+                                priceTax = priceNoTax * (1 + tax / 100);
                             }
                         } else if (item.TypeItem === 'Usluga') {
                             const serviceItem = service.find(s => String(s.ID_service) === String(item.ID_service));
@@ -492,9 +555,12 @@ const ShowOffer = () => {
                                 priceNoTax = parseFloat(serviceItem.PriceNoTax || 0);
                                 priceTax = parseFloat(serviceItem.PriceTax || 0);
                                 tax = parseFloat(serviceItem.Tax || 25);
-                                totalPriceTax = priceTax * amount;
                             }
                         }
+
+                        const totalNoTax = priceNoTax * amount;
+                        const totalTax = (priceTax - priceNoTax) * amount;
+                        const totalPriceTax = totalNoTax + totalTax;
 
                         return (
                             <tr key={index}>
@@ -503,10 +569,11 @@ const ShowOffer = () => {
                                 <td>{type}</td>
                                 <td>{amount}</td>
                                 <td>{jm}</td>
-                                <td>{priceNoTax.toFixed(2)} €</td>
-                                <td>{priceTax.toFixed(2)} €</td>
+                                <td>{priceNoTax.toFixed(2)}</td>
                                 <td>{tax}%</td>
-                                <td>{totalPriceTax.toFixed(2)} €</td>
+                                <td>{priceTax.toFixed(2)}</td>
+                                <td>{totalTax.toFixed(2)}</td>
+                                <td>{totalPriceTax.toFixed(2)}</td>
                                 <td>
                                     <Button
                                         size="sm"
@@ -528,6 +595,51 @@ const ShowOffer = () => {
                         );
                     })}
                 </tbody>
+                <tfoot>
+                    {(() => {
+                        let totalNoTax = 0;
+                        let totalTax = 0;
+                        let totalWithTax = 0;
+
+                        offerItems.forEach(item => {
+                            let amount = parseFloat(item.Amount || 0);
+                            let priceNoTax = 0;
+                            let priceTax = 0;
+
+                            if (item.TypeItem === 'Materijal') {
+                                const material = materials.find(m => String(m.ID_material) === String(item.ID_material));
+                                if (material) {
+                                    priceNoTax = parseFloat(material.SellingPrice || 0);
+                                    priceTax = priceNoTax * (1 + (parseFloat(item.Tax || 25) / 100));
+                                }
+                            } else if (item.TypeItem === 'Usluga') {
+                                const serviceItem = service.find(s => String(s.ID_service) === String(item.ID_service));
+                                if (serviceItem) {
+                                    priceNoTax = parseFloat(serviceItem.PriceNoTax || 0);
+                                    priceTax = parseFloat(serviceItem.PriceTax || 0);
+                                }
+                            }
+
+                            totalNoTax += priceNoTax * amount;
+                            totalTax += (priceTax - priceNoTax) * amount;
+                            totalWithTax += priceTax * amount;
+                        });
+
+                        return (
+                            <>
+                                <tr style={{ fontWeight: 'bold', backgroundColor: '#f0f0f0' }}>
+                                    <td colSpan={5} style={{ textAlign: 'right' }}>Ukupno bez PDV-a:</td>
+                                    <td>{totalNoTax.toFixed(2)} €</td>
+                                    <td style={{ textAlign: 'right' }}>PDV:</td>
+                                    <td>{totalTax.toFixed(2)} €</td>
+                                    <td style={{ textAlign: 'right' }}>Ukupno:</td>
+                                    <td>{totalWithTax.toFixed(2)} €</td>
+                                    <td></td>
+                                </tr>
+                            </>
+                        );
+                    })()}
+                </tfoot>
             </Table>
 
 
@@ -536,9 +648,6 @@ const ShowOffer = () => {
             </Button>
             <ToastContainer position="top-right" autoClose={3000} hideProgressBar newestOnTop />
         </div>
-
-
-
     )
 }
 

@@ -266,7 +266,7 @@ const CreateReceipt = () => {
             taxRate = parseFloat(material?.Tax || 25);
         } else if (ID_service) {
             const svc = service.find(s => s.ID_service == ID_service);
-            unitPrice = parseFloat(svc?.Price || 0);
+            unitPrice = parseFloat(svc?.PriceNoTax || 0);
             taxRate = parseFloat(svc?.Tax || 25);
         }
 

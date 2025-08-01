@@ -113,14 +113,14 @@ const CreateReceipt = () => {
         let taxRate = 25; // default fallback
 
         if (ID_material) {
-            const material = materials.find(m => m.ID_material == ID_material);
+            const material = materials.find(m => m.ID_material === Number(ID_material));
             if (material) {
                 unitPrice = parseFloat(material.SellingPrice || 0);
                 taxRate = parseFloat(material.Tax || 25);
                 // console.log("Pronađen materijal:", material);
             }
         } else if (ID_service) {
-            const svc = service.find(s => s.ID_service == ID_service);
+            const svc = service.find(s => s.ID_service === Number(ID_service));
             if (svc) {
                 unitPrice = parseFloat(svc.PriceNoTax || 0);  // ili SellingPrice, ovisno o bazi
                 taxRate = parseFloat(svc.Tax || 25);
@@ -261,11 +261,11 @@ const CreateReceipt = () => {
         let taxRate = 25;
 
         if (ID_material) {
-            const material = materials.find(m => m.ID_material == ID_material);
+            const material = materials.find(m => m.ID_material === Number(ID_material));
             unitPrice = parseFloat(material?.SellingPrice || 0);
             taxRate = parseFloat(material?.Tax || 25);
         } else if (ID_service) {
-            const svc = service.find(s => s.ID_service == ID_service);
+            const svc = service.find(s => s.ID_service === ID_service);
             unitPrice = parseFloat(svc?.PriceNoTax || 0);
             taxRate = parseFloat(svc?.Tax || 25);
         }

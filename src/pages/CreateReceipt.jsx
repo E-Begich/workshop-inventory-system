@@ -117,14 +117,14 @@ const CreateReceipt = () => {
             if (material) {
                 unitPrice = parseFloat(material.SellingPrice || 0);
                 taxRate = parseFloat(material.Tax || 25);
-                console.log("📦 Pronađen materijal:", material);
+                // console.log("Pronađen materijal:", material);
             }
         } else if (ID_service) {
             const svc = service.find(s => s.ID_service == ID_service);
             if (svc) {
                 unitPrice = parseFloat(svc.PriceNoTax || 0);  // ili SellingPrice, ovisno o bazi
                 taxRate = parseFloat(svc.Tax || 25);
-                console.log("🛠️ Pronađena usluga:", svc);
+                // console.log(" Pronađena usluga:", svc);
             }
         }
 
@@ -139,7 +139,7 @@ const CreateReceipt = () => {
             Tax: taxRate,
         };
 
-        console.log("🧾 Novi item:", itemToAdd);
+        // console.log("Nova stavka:", itemToAdd);
 
         setReceiptItems([...receiptItems, itemToAdd]);
         resetNewItem();
@@ -195,7 +195,7 @@ const CreateReceipt = () => {
             );
             totals.tax = totals.priceTax - totals.priceNoTax;
 
-            console.log("Totali koji se šalju u račun:", totals);
+            // console.log("Totali koji se šalju u račun:", totals);
 
             // Priprema podataka za kreiranje računa (zaglavlje)
             const receiptData = {
@@ -204,10 +204,10 @@ const CreateReceipt = () => {
                 Tax: totals.tax.toFixed(2),
                 PriceTax: totals.priceTax.toFixed(2),
             };
-            console.log(receiptData);
+            //  console.log(receiptData);
 
             // 1. Kreiraj račun i dohvati njegov ID
-            console.log(receiptData)
+            // console.log(receiptData)
             const res = await axios.post('/api/aplication/addReceipt', receiptData);
             const createdReceiptId = res.data.ID_receipt;
 
@@ -215,9 +215,9 @@ const CreateReceipt = () => {
             const itemsToSend = receiptItems.map(item => ({
                 ...item,
                 ID_receipt: createdReceiptId,
-                Tax: item.Tax ?? 25,  // PDV stopa, ne iznos poreza, to je u redu
+                Tax: item.Tax ?? 25,  // PDV stopa, ne iznos poreza
             }));
-            console.log("Items to send:", itemsToSend);
+            // console.log("Stavki za slanje:", itemsToSend);
 
             // 3. Pošalji stavke na backend
             await axios.post('/api/aplication/addReceiptItem', itemsToSend);
@@ -392,135 +392,139 @@ const CreateReceipt = () => {
                         ))}
                     </Form.Select>
                 </Col>
+                {newItem.TypeItem && (
+                    <>
+                        {newItem.TypeItem === 'Materijal' && (
+                            <Col md={6}>
+                                <Form.Group>
+                                    <Form.Label style={labelStyle}>Materijal</Form.Label>
+                                    <Form.Select style={selectStyle}
+                                        value={newItem.ID_material}
+                                        onChange={(e) => {
+                                            const selected = materials.find((m) => String(m.ID_material) === String(e.target.value));
+                                            const unitPrice = parseFloat(selected?.SellingPrice || 0);
+                                            const amount = parseFloat(newItem.Amount || 0);
+                                            const totalNoTax = unitPrice * amount;
+                                            setNewItem({
+                                                ...newItem,
+                                                ID_material: e.target.value,
+                                                PriceNoTax: totalNoTax,
+                                                PriceTax: totalNoTax * 1.25,
+                                            });
+                                        }}
+                                    >
+                                        <option value="">Odaberi materijal</option>
+                                        {materials.map((m) => (
+                                            <option key={m.ID_material} value={m.ID_material}>
+                                                {m.NameMaterial} ({m.SellingPrice} €/m)
+                                            </option>
+                                        ))}
+                                    </Form.Select>
+                                    {/* Prikaz dostupne količine */}
+                                    {newItem.ID_material && (
+                                        <Form.Text className="text-muted">
+                                            Dostupno na skladištu:{" "}
+                                            {
+                                                materials.find((m) => String(m.ID_material) === String(newItem.ID_material))?.Amount || 0
+                                            }{" "}
+                                            {materials.find((m) => String(m.ID_material) === String(newItem.ID_material))?.Unit}
+                                        </Form.Text>
+                                    )}
+                                </Form.Group>
+                            </Col>
+                        )}
 
-                {newItem.TypeItem === 'Materijal' && (
-                    <Col md={6}>
-                        <Form.Group>
-                            <Form.Label style={labelStyle}>Materijal</Form.Label>
-                            <Form.Select style={selectStyle}
-                                value={newItem.ID_material}
-                                onChange={(e) => {
-                                    const selected = materials.find((m) => String(m.ID_material) === String(e.target.value));
-                                    const unitPrice = parseFloat(selected?.SellingPrice || 0);
-                                    const amount = parseFloat(newItem.Amount || 0);
-                                    const totalNoTax = unitPrice * amount;
-                                    setNewItem({
-                                        ...newItem,
-                                        ID_material: e.target.value,
-                                        PriceNoTax: totalNoTax,
-                                        PriceTax: totalNoTax * 1.25,
-                                    });
-                                }}
-                            >
-                                <option value="">Odaberi materijal</option>
-                                {materials.map((m) => (
-                                    <option key={m.ID_material} value={m.ID_material}>
-                                        {m.NameMaterial} ({m.SellingPrice} €/m)
-                                    </option>
-                                ))}
-                            </Form.Select>
-                            {/* Prikaz dostupne količine */}
-                            {newItem.ID_material && (
-                                <Form.Text className="text-muted">
-                                    Dostupno na skladištu:{" "}
-                                    {
-                                        materials.find((m) => String(m.ID_material) === String(newItem.ID_material))?.Amount || 0
-                                    }{" "}
-                                    {materials.find((m) => String(m.ID_material) === String(newItem.ID_material))?.Unit}
-                                </Form.Text>
-                            )}
-                        </Form.Group>
-                    </Col>
-                )}
-
-                {newItem.TypeItem === 'Usluga' && (
-                    <Col md={6}>
-                        <Form.Group>
-                            <Form.Label style={labelStyle}>Usluga</Form.Label>
-                            <Form.Select style={selectStyle}
-                                value={newItem.ID_service}
-                                onChange={(e) => {
-                                    const selected = service.find((s) => String(s.ID_service) === String(e.target.value));
-                                    const unitPrice = parseFloat(selected?.PriceNoTax || 0);
-                                    const amount = parseFloat(newItem.Amount || 0);
-                                    const totalNoTax = unitPrice * amount;
-                                    setNewItem({
-                                        ...newItem,
-                                        ID_service: e.target.value,
-                                        PriceNoTax: totalNoTax,
-                                        PriceTax: totalNoTax * 1.25,
-                                    });
-                                }}
-                            >
-                                <option value="">Odaberi uslugu</option>
-                                {service.map((s) => (
-                                    <option key={s.ID_service} value={s.ID_service}>
-                                        {s.Name} ({s.PriceTax} €)
-                                    </option>
-                                ))}
+                        {newItem.TypeItem === 'Usluga' && (
+                            <Col md={6}>
+                                <Form.Group>
+                                    <Form.Label style={labelStyle}>Usluga</Form.Label>
+                                    <Form.Select style={selectStyle}
+                                        value={newItem.ID_service}
+                                        onChange={(e) => {
+                                            const selected = service.find((s) => String(s.ID_service) === String(e.target.value));
+                                            const unitPrice = parseFloat(selected?.PriceNoTax || 0);
+                                            const amount = parseFloat(newItem.Amount || 0);
+                                            const totalNoTax = unitPrice * amount;
+                                            setNewItem({
+                                                ...newItem,
+                                                ID_service: e.target.value,
+                                                PriceNoTax: totalNoTax,
+                                                PriceTax: totalNoTax * 1.25,
+                                            });
+                                        }}
+                                    >
+                                        <option value="">Odaberi uslugu</option>
+                                        {service.map((s) => (
+                                            <option key={s.ID_service} value={s.ID_service}>
+                                                {s.Name} ({s.PriceTax} €)
+                                            </option>
+                                        ))}
 
 
-                            </Form.Select>
-                        </Form.Group>
-                    </Col>
-                )}
-                <Col md={6}>
-                    <Form.Group>
-                        <Form.Label style={labelStyle}>Količina</Form.Label>
-                        <Form.Control
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={newItem.Amount}
-                            onChange={(e) => {
-                                const amount = parseFloat(e.target.value);
-                                let priceNoTax = newItem.PriceNoTax;
-                                let priceTax = newItem.PriceTax;
+                                    </Form.Select>
+                                </Form.Group>
+                            </Col>
+                             
+                        )}
 
-                                if (newItem.TypeItem === 'Usluga') {
-                                    const selected = service.find((s) => String(s.ID_service) === String(newItem.ID_service));
-                                    priceNoTax = (selected?.PriceService || 0) * amount;
-                                    priceTax = priceNoTax * 1.25;
-                                } else if (newItem.TypeItem === 'Materijal') {
-                                    const selected = service.find((s) => String(s.ID_service) === String(newItem.ID_service));
-                                    priceNoTax = (selected?.SellingPrice || 0) * amount;
-                                    priceTax = priceNoTax * 1.25;
-                                }
+                        <Col md={6} className='mt-3'>
+                            <Form.Group>
+                                <Form.Label style={labelStyle}>Količina</Form.Label>
+                                <Form.Control
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={newItem.Amount}
+                                    onChange={(e) => {
+                                        const amount = parseFloat(e.target.value);
+                                        let priceNoTax = newItem.PriceNoTax;
+                                        let priceTax = newItem.PriceTax;
 
-                                setNewItem({ ...newItem, Amount: amount, PriceNoTax: priceNoTax, PriceTax: priceTax });
-                            }}
-                        />
-                    </Form.Group>
-                </Col>
-            </Row>
-            <div className="d-flex justify-content-end">
-                <Button variant="secondary" onClick={editingIndex !== null ? handleSaveEditedItem : handleAddItem}>
-                    {editingIndex !== null ? "Spremi izmjene" : "Dodaj stavku"}
-                </Button>
-            </div>
-            <hr />
-            <Form.Group>
-                <Form.Label>Način plaćanja</Form.Label>
-                <Form.Control
-                    as="select"
-                    value={form.PaymentMethod}
-                    onChange={(e) => setForm({ ...form, PaymentMethod: e.target.value })}
-                >
-                    <option value="">Odaberi način plaćanja</option>
-                    {payment.map((loc) => (
-                        <option key={loc} value={loc}>
-                            {loc}
-                        </option>
-                    ))}
-                </Form.Control>
-            </Form.Group>
-            <br />
-            <hr />
-            <h2 className="text-lg font-semibold mb-2">Stavke na računu</h2>
+                                        if (newItem.TypeItem === 'Usluga') {
+                                            const selected = service.find((s) => String(s.ID_service) === String(newItem.ID_service));
+                                            priceNoTax = (selected?.PriceService || 0) * amount;
+                                            priceTax = priceNoTax * 1.25;
+                                        } else if (newItem.TypeItem === 'Materijal') {
+                                            const selected = service.find((s) => String(s.ID_service) === String(newItem.ID_service));
+                                            priceNoTax = (selected?.SellingPrice || 0) * amount;
+                                            priceTax = priceNoTax * 1.25;
+                                        }
 
-            <br />
-            {
-                receiptItems.length > 0 && (
+                                        setNewItem({ ...newItem, Amount: amount, PriceNoTax: priceNoTax, PriceTax: priceTax });
+                                    }}
+                                />
+                            </Form.Group>
+                        </Col>
+                            </>
+)}
+                    </Row>
+                <div className="d-flex justify-content-end">
+                    <Button variant="secondary" onClick={editingIndex !== null ? handleSaveEditedItem : handleAddItem}>
+                        {editingIndex !== null ? "Spremi izmjene" : "Dodaj stavku"}
+                    </Button>
+                </div>
+                <hr />
+                <Form.Group>
+                    <Form.Label>Način plaćanja</Form.Label>
+                    <Form.Control
+                        as="select"
+                        value={form.PaymentMethod}
+                        onChange={(e) => setForm({ ...form, PaymentMethod: e.target.value })}
+                    >
+                        <option value="">Odaberi način plaćanja</option>
+                        {payment.map((loc) => (
+                            <option key={loc} value={loc}>
+                                {loc}
+                            </option>
+                        ))}
+                    </Form.Control>
+                </Form.Group>
+                <br />
+                <hr />
+                <h2 className="text-lg font-semibold mb-2">Stavke na računu</h2>
+
+                <br />
+                {receiptItems.length > 0 ? (
                     <Table bordered>
                         <thead>
                             <tr>
@@ -664,12 +668,13 @@ const CreateReceipt = () => {
                         </tfoot>
 
                     </Table>
-                )
-            }
+                ) : (
+                    <p className="text-muted">Nema stavki. Dodajte stavke kako bi se prikazale na računu.</p>
+                )}
 
-            <div className="text-end mt-3">
-                <Button variant="danger" onClick={handleSubmitReceipt} className="ms-3">Spremi račun</Button>
-            </div>
+                <div className="text-end mt-3">
+                    <Button variant="danger" onClick={handleSubmitReceipt} className="ms-3">Spremi račun</Button>
+                </div>
         </Card >
     );
 };

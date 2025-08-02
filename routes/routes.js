@@ -106,6 +106,9 @@ router.delete('/deleteMaterial/:ID_material', materialsController.deleteMaterial
 router.get('/getLocationEnum', materialsController.getLocationEnum);
 router.get('/getUnitEnum', materialsController.getUnitEnum);
 router.get('/getTypeChangeEnum', materialsController.getTypeChangeEnum);
+router.put('/updateMaterialAmount/:ID_material', materialsController.updateMaterialAmount);
+router.post('/checkMaterialStock', materialsController.checkMaterialStock);
+
 
 
 

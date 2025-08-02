@@ -159,18 +159,42 @@ const CreateReceipt = () => {
     };
 
     const handleSubmitReceipt = async () => {
-        // Validacija osnovnih podataka o računu
-        if (!form.ID_client || !form.ID_user || !form.DateCreate) {
+        // ✅ Validacija osnovnih podataka
+        if (!form.ID_client || !form.ID_user || !form.DateCreate || !form.PaymentMethod) {
             toast.error('Molimo popunite sve podatke o računu.');
             return;
         }
 
-        // Validacija stavki računa
         if (receiptItems.length === 0) {
             toast.error('Dodajte barem jednu stavku računa.');
             return;
         }
 
+        // ✅ Provjera dostupnosti materijala (preko API-ja)
+        for (const item of receiptItems) {
+            if (item.ID_material) {
+                try {
+                    const res = await axios.post('/api/aplication/checkMaterialStock', {
+                        ID_material: item.ID_material,
+                        requestedAmount: Number(item.Amount),
+                    });
+
+                    if (!res.data.sufficient) {
+                        toast.error(res.data.message);
+                        return;
+                    }
+                    if (res.data.warning) {
+                        toast.warn(res.data.message);
+                    }
+                } catch (error) {
+                    console.error('Greška kod provjere materijala:', error);
+                    toast.error('Greška pri provjeri dostupnosti materijala.');
+                    return;
+                }
+            }
+        }
+
+        // ✅ Validacija pojedinačnih stavki
         for (const item of receiptItems) {
             if (
                 !item.TypeItem ||
@@ -183,11 +207,38 @@ const CreateReceipt = () => {
             }
         }
 
+        // ✅ Provjera skladišta prije zaključivanja
+        const insufficient = [];
+        const lowStock = [];
+
+        for (const item of receiptItems) {
+            if (item.TypeItem === 'Materijal') {
+                const material = materials.find(m => m.ID_material === Number(item.ID_material));
+                if (!material) continue;
+
+                const newQty = material.Amount - item.Amount;
+                if (newQty < 0) {
+                    insufficient.push(`${material.NameMaterial} (na skladištu: ${material.Amount}, potrebno: ${item.Amount})`);
+                } else if (newQty <= material.MinAmount) {
+                    lowStock.push(material.NameMaterial);
+                }
+            }
+        }
+
+        if (insufficient.length > 0) {
+            toast.error(`Nema dovoljno materijala: ${insufficient.join(', ')}`);
+            return;
+        }
+
+        if (lowStock.length > 0) {
+            toast.warn(`Pažnja: Sljedeći materijali će pasti ispod minimalne količine: ${lowStock.join(', ')}`);
+        }
+
         try {
-            // Izračun ukupnih vrijednosti
+            // ✅ Izračun ukupnog iznosa
             const totals = receiptItems.reduce(
                 (acc, item) => {
-                    acc.priceNoTax += parseFloat(item.PriceNoTax || 0);  // već je pomnoženo u handleAddItem
+                    acc.priceNoTax += parseFloat(item.PriceNoTax || 0);
                     acc.priceTax += parseFloat(item.PriceTax || 0);
                     return acc;
                 },
@@ -195,38 +246,47 @@ const CreateReceipt = () => {
             );
             totals.tax = totals.priceTax - totals.priceNoTax;
 
-            // console.log("Totali koji se šalju u račun:", totals);
-
-            // Priprema podataka za kreiranje računa (zaglavlje)
+            // ✅ Spremi račun (zaglavlje)
             const receiptData = {
                 ...form,
                 PriceNoTax: totals.priceNoTax.toFixed(2),
                 Tax: totals.tax.toFixed(2),
                 PriceTax: totals.priceTax.toFixed(2),
             };
-            //  console.log(receiptData);
 
-            // 1. Kreiraj račun i dohvati njegov ID
-            // console.log(receiptData)
             const res = await axios.post('/api/aplication/addReceipt', receiptData);
             const createdReceiptId = res.data.ID_receipt;
 
-            // 2. Pripremi stavke računa za slanje s ID_receipt
+            // ✅ Spremi stavke
             const itemsToSend = receiptItems.map(item => ({
                 ...item,
                 ID_receipt: createdReceiptId,
-                Tax: item.Tax ?? 25,  // PDV stopa, ne iznos poreza
+                Tax: item.Tax ?? 25,
             }));
-            // console.log("Stavki za slanje:", itemsToSend);
-
-            // 3. Pošalji stavke na backend
             await axios.post('/api/aplication/addReceiptItem', itemsToSend);
+
+            // ✅ Ažuriraj skladište
+            for (const item of receiptItems) {
+                if (item.TypeItem === 'Materijal') {
+                    const material = materials.find(m => m.ID_material === Number(item.ID_material));
+                    if (!material) continue;
+
+                    const updatedAmount = material.Amount - item.Amount;
+
+                    await axios.put(`/api/aplication/updateMaterialAmount/${material.ID_material}`, {
+                        Amount: item.Amount, //šalje samo količinu koja je upisana u račun
+                    });
+
+                    if (updatedAmount <= material.MinAmount) {
+                        toast.warn(`Materijal ${material.NameMaterial} je pao ispod minimalne količine!`);
+                    }
+                }
+            }
 
             toast.success('Račun uspješno kreiran!');
 
-            // Reset formi i stavki nakon uspješnog spremanja
+            // ✅ Reset formi i podataka
             setForm({
-                //ReceiptNumber: '',
                 ID_client: '',
                 ID_user: '',
                 DateCreate: new Date().toISOString().split('T')[0],
@@ -237,12 +297,14 @@ const CreateReceipt = () => {
                 PaymentMethod: '',
             });
             setReceiptItems([]);
+            fetchMaterials();
 
         } catch (error) {
             console.error('Greška pri spremanju računa:', error);
             toast.error('Došlo je do greške pri spremanju računa.');
         }
     };
+
 
     const handleSaveEditedItem = () => {
         const { ID_material, ID_service, Amount, TypeItem } = newItem;
@@ -464,7 +526,7 @@ const CreateReceipt = () => {
                                     </Form.Select>
                                 </Form.Group>
                             </Col>
-                             
+
                         )}
 
                         <Col md={6} className='mt-3'>
@@ -495,186 +557,186 @@ const CreateReceipt = () => {
                                 />
                             </Form.Group>
                         </Col>
-                            </>
-)}
-                    </Row>
-                <div className="d-flex justify-content-end">
-                    <Button variant="secondary" onClick={editingIndex !== null ? handleSaveEditedItem : handleAddItem}>
-                        {editingIndex !== null ? "Spremi izmjene" : "Dodaj stavku"}
-                    </Button>
-                </div>
-                <hr />
-                <Form.Group>
-                    <Form.Label>Način plaćanja</Form.Label>
-                    <Form.Control
-                        as="select"
-                        value={form.PaymentMethod}
-                        onChange={(e) => setForm({ ...form, PaymentMethod: e.target.value })}
-                    >
-                        <option value="">Odaberi način plaćanja</option>
-                        {payment.map((loc) => (
-                            <option key={loc} value={loc}>
-                                {loc}
-                            </option>
-                        ))}
-                    </Form.Control>
-                </Form.Group>
-                <br />
-                <hr />
-                <h2 className="text-lg font-semibold mb-2">Stavke na računu</h2>
+                    </>
+                )}
+            </Row>
+            <div className="d-flex justify-content-end">
+                <Button variant="secondary" onClick={editingIndex !== null ? handleSaveEditedItem : handleAddItem}>
+                    {editingIndex !== null ? "Spremi izmjene" : "Dodaj stavku"}
+                </Button>
+            </div>
+            <hr />
+            <Form.Group>
+                <Form.Label>Način plaćanja</Form.Label>
+                <Form.Control
+                    as="select"
+                    value={form.PaymentMethod}
+                    onChange={(e) => setForm({ ...form, PaymentMethod: e.target.value })}
+                >
+                    <option value="">Odaberi način plaćanja</option>
+                    {payment.map((loc) => (
+                        <option key={loc} value={loc}>
+                            {loc}
+                        </option>
+                    ))}
+                </Form.Control>
+            </Form.Group>
+            <br />
+            <hr />
+            <h2 className="text-lg font-semibold mb-2">Stavke na računu</h2>
 
-                <br />
-                {receiptItems.length > 0 ? (
-                    <Table bordered>
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Naziv</th>
-                                <th>Vrsta</th>
-                                <th>Količina</th>
-                                <th>JM</th>
-                                <th>Jedinična cijena bez PDV-a</th>
-                                <th>PDV (%)</th>
-                                <th>Jedinična cijena s PDV-om</th>
-                                <th>Iznos PDV-a</th>
-                                <th>Ukupna cijena s PDV-om</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {receiptItems.map((item, index) => {
-                                let ID = '-';
-                                let name = '-';
-                                let type = item.TypeItem;
+            <br />
+            {receiptItems.length > 0 ? (
+                <Table bordered>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Naziv</th>
+                            <th>Vrsta</th>
+                            <th>Količina</th>
+                            <th>JM</th>
+                            <th>Jedinična cijena bez PDV-a</th>
+                            <th>PDV (%)</th>
+                            <th>Jedinična cijena s PDV-om</th>
+                            <th>Iznos PDV-a</th>
+                            <th>Ukupna cijena s PDV-om</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {receiptItems.map((item, index) => {
+                            let ID = '-';
+                            let name = '-';
+                            let type = item.TypeItem;
+                            let amount = parseFloat(item.Amount || 0);
+                            let jm = '-';
+                            let priceNoTax = 0;
+                            let priceTax = 0;
+                            let tax = 25;
+
+                            if (type === 'Materijal') {
+                                const material = materials.find(m => String(m.ID_material) === String(item.ID_material));
+                                if (material) {
+                                    ID = material.ID_material;
+                                    name = material.NameMaterial;
+                                    jm = material.Unit;
+                                    priceNoTax = parseFloat(material.SellingPrice || 0);
+                                    tax = 25;
+                                    priceTax = priceNoTax * (1 + tax / 100);
+                                }
+                            } else if (type === 'Usluga') {
+                                const serviceItem = service.find(s => String(s.ID_service) === String(item.ID_service));
+                                if (serviceItem) {
+                                    ID = serviceItem.ID_service;
+                                    name = serviceItem.Name;
+                                    jm = 'usluga';
+                                    priceNoTax = parseFloat(serviceItem.PriceNoTax || 0);
+                                    priceTax = parseFloat(serviceItem.PriceTax || 0);
+                                    tax = parseFloat(serviceItem.Tax || 25);
+                                }
+                            }
+
+                            const totalNoTax = priceNoTax * amount;
+                            const totalTax = (priceTax - priceNoTax) * amount;
+                            const totalPriceTax = totalNoTax + totalTax;
+
+                            return (
+                                <tr key={index}>
+                                    <td>{ID}</td>
+                                    <td>{name}</td>
+                                    <td>{type}</td>
+                                    <td>{amount}</td>
+                                    <td>{jm}</td>
+                                    <td>{priceNoTax.toFixed(2)}</td>
+                                    <td>{tax}%</td>
+                                    <td>{priceTax.toFixed(2)}</td>
+                                    <td>{totalTax.toFixed(2)}</td>
+                                    <td>{totalPriceTax.toFixed(2)}</td>
+                                    <td>
+
+                                        <Button
+                                            size="sm"
+                                            variant="warning"
+                                            className="me-2"
+                                            onClick={() => startEditing(index)}
+                                        >
+                                            Uredi
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="danger"
+                                            onClick={() => deleteItem(index)}
+                                        >
+                                            Obriši
+                                        </Button>
+
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+
+                    {/* Ukupni zbrojevi ispod tablice */}
+                    <tfoot>
+                        {(() => {
+                            let totalNoTax = 0;
+                            let totalTax = 0;
+                            let totalWithTax = 0;
+
+                            receiptItems.forEach(item => {
                                 let amount = parseFloat(item.Amount || 0);
-                                let jm = '-';
                                 let priceNoTax = 0;
                                 let priceTax = 0;
-                                let tax = 25;
 
-                                if (type === 'Materijal') {
+                                if (item.TypeItem === 'Materijal') {
                                     const material = materials.find(m => String(m.ID_material) === String(item.ID_material));
                                     if (material) {
-                                        ID = material.ID_material;
-                                        name = material.NameMaterial;
-                                        jm = material.Unit;
                                         priceNoTax = parseFloat(material.SellingPrice || 0);
-                                        tax = 25;
-                                        priceTax = priceNoTax * (1 + tax / 100);
+                                        priceTax = priceNoTax * 1.25;
                                     }
-                                } else if (type === 'Usluga') {
+                                } else if (item.TypeItem === 'Usluga') {
                                     const serviceItem = service.find(s => String(s.ID_service) === String(item.ID_service));
                                     if (serviceItem) {
-                                        ID = serviceItem.ID_service;
-                                        name = serviceItem.Name;
-                                        jm = 'usluga';
                                         priceNoTax = parseFloat(serviceItem.PriceNoTax || 0);
                                         priceTax = parseFloat(serviceItem.PriceTax || 0);
-                                        tax = parseFloat(serviceItem.Tax || 25);
                                     }
                                 }
 
-                                const totalNoTax = priceNoTax * amount;
-                                const totalTax = (priceTax - priceNoTax) * amount;
-                                const totalPriceTax = totalNoTax + totalTax;
+                                totalNoTax += priceNoTax * amount;
+                                totalTax += (priceTax - priceNoTax) * amount;
+                                totalWithTax += priceTax * amount;
+                            });
 
-                                return (
-                                    <tr key={index}>
-                                        <td>{ID}</td>
-                                        <td>{name}</td>
-                                        <td>{type}</td>
-                                        <td>{amount}</td>
-                                        <td>{jm}</td>
-                                        <td>{priceNoTax.toFixed(2)}</td>
-                                        <td>{tax}%</td>
-                                        <td>{priceTax.toFixed(2)}</td>
-                                        <td>{totalTax.toFixed(2)}</td>
-                                        <td>{totalPriceTax.toFixed(2)}</td>
-                                        <td>
-
-                                            <Button
-                                                size="sm"
-                                                variant="warning"
-                                                className="me-2"
-                                                onClick={() => startEditing(index)}
-                                            >
-                                                Uredi
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="danger"
-                                                onClick={() => deleteItem(index)}
-                                            >
-                                                Obriši
-                                            </Button>
-
-                                        </td>
+                            return (
+                                <>
+                                    <tr style={{ fontWeight: 'bold', backgroundColor: '#f0f0f0' }}>
+                                        <td colSpan={5} style={{ textAlign: 'right' }}>Ukupno bez PDV-a:</td>
+                                        <td>{totalNoTax.toFixed(2)} €</td>
+                                        <td style={{ textAlign: 'right' }}>PDV:</td>
+                                        <td>{totalTax.toFixed(2)} €</td>
+                                        <td style={{ textAlign: 'right' }}>Ukupno:</td>
+                                        <td>{totalWithTax.toFixed(2)} €</td>
+                                        <td></td>
                                     </tr>
-                                );
-                            })}
-                        </tbody>
+                                    <tr style={{ backgroundColor: '#f9f9f9' }}>
+                                        <td colSpan={10} style={{ textAlign: 'right', fontStyle: 'italic' }}>
+                                            Način plaćanja: <strong>{form.PaymentMethod || 'Nije odabrano'}</strong>
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                </>
+                            );
+                        })()}
+                    </tfoot>
 
-                        {/* Ukupni zbrojevi ispod tablice */}
-                        <tfoot>
-                            {(() => {
-                                let totalNoTax = 0;
-                                let totalTax = 0;
-                                let totalWithTax = 0;
+                </Table>
+            ) : (
+                <p className="text-muted">Nema stavki. Dodajte stavke kako bi se prikazale na računu.</p>
+            )}
 
-                                receiptItems.forEach(item => {
-                                    let amount = parseFloat(item.Amount || 0);
-                                    let priceNoTax = 0;
-                                    let priceTax = 0;
-
-                                    if (item.TypeItem === 'Materijal') {
-                                        const material = materials.find(m => String(m.ID_material) === String(item.ID_material));
-                                        if (material) {
-                                            priceNoTax = parseFloat(material.SellingPrice || 0);
-                                            priceTax = priceNoTax * 1.25;
-                                        }
-                                    } else if (item.TypeItem === 'Usluga') {
-                                        const serviceItem = service.find(s => String(s.ID_service) === String(item.ID_service));
-                                        if (serviceItem) {
-                                            priceNoTax = parseFloat(serviceItem.PriceNoTax || 0);
-                                            priceTax = parseFloat(serviceItem.PriceTax || 0);
-                                        }
-                                    }
-
-                                    totalNoTax += priceNoTax * amount;
-                                    totalTax += (priceTax - priceNoTax) * amount;
-                                    totalWithTax += priceTax * amount;
-                                });
-
-                                return (
-                                    <>
-                                        <tr style={{ fontWeight: 'bold', backgroundColor: '#f0f0f0' }}>
-                                            <td colSpan={5} style={{ textAlign: 'right' }}>Ukupno bez PDV-a:</td>
-                                            <td>{totalNoTax.toFixed(2)} €</td>
-                                            <td style={{ textAlign: 'right' }}>PDV:</td>
-                                            <td>{totalTax.toFixed(2)} €</td>
-                                            <td style={{ textAlign: 'right' }}>Ukupno:</td>
-                                            <td>{totalWithTax.toFixed(2)} €</td>
-                                            <td></td>
-                                        </tr>
-                                        <tr style={{ backgroundColor: '#f9f9f9' }}>
-                                            <td colSpan={10} style={{ textAlign: 'right', fontStyle: 'italic' }}>
-                                                Način plaćanja: <strong>{form.PaymentMethod || 'Nije odabrano'}</strong>
-                                            </td>
-                                            <td></td>
-                                        </tr>
-                                    </>
-                                );
-                            })()}
-                        </tfoot>
-
-                    </Table>
-                ) : (
-                    <p className="text-muted">Nema stavki. Dodajte stavke kako bi se prikazale na računu.</p>
-                )}
-
-                <div className="text-end mt-3">
-                    <Button variant="danger" onClick={handleSubmitReceipt} className="ms-3">Spremi račun</Button>
-                </div>
+            <div className="text-end mt-3">
+                <Button variant="danger" onClick={handleSubmitReceipt} className="ms-3">Spremi račun</Button>
+            </div>
         </Card >
     );
 };

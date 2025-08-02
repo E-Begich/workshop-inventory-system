@@ -106,7 +106,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             {isPovijestOpen && (
               <ul className="nav flex-column ms-3">
                 <li className="nav-item mb-1">
-                  <Link to="/offers/history" className="nav-link text-white">
+                  <Link to="/showOffer" className="nav-link text-white">
                     <i className="fas fa-history me-2" />
                     Povijest ponuda
                   </Link>

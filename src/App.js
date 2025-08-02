@@ -7,6 +7,7 @@ import ShowService from './pages/ShowService';
 import CreateOffer from './pages/CreateOffer';
 import CreateReceipt from './pages/CreateReceipt';
 import ShowClient from './pages/ShowClient';
+import ShowOffer from './pages/ShowOffer'
 import Sidebar from "./components/Sidebar";
 import TopNavBar from "./components/TopNavBar";
 import Login from "./pages/Login";
@@ -35,6 +36,7 @@ const Layout = ({ sidebarOpen, toggleSidebar }) => {
             <Route path="/getAllClients" element={<ShowClient />} />
             <Route path="/addOffer" element={<CreateOffer />} />
             <Route path="/addReceipt" element={<CreateReceipt />} />
+            <Route path="/showOffer" element={<ShowOffer />} />
           </Routes>
         </div>
       </div>

@@ -260,8 +260,8 @@ const ShowMaterials = () => {
         </div>
       </div>
 
-      <div style={{ overflowX: 'auto', width: '100%' }}>
-        <Table striped bordered hover size="sm" className="mb-3" style={{ minWidth: '1200px' }}>
+      <div className="table-responsive">
+        <Table striped bordered hover size="sm" className="mb-3">
           <thead>
             <tr>
               {[
@@ -310,15 +310,15 @@ const ShowMaterials = () => {
                 <td>{mat.TypeChange}</td>
                 <td>{(parseFloat(mat.PurchasePrice) * parseFloat(mat.Amount)).toFixed(2)}</td>
                 <td>{(parseFloat(mat.SellingPrice) * parseFloat(mat.Amount)).toFixed(2)}</td>
-                  <td style={{ whiteSpace: 'nowrap' }}>
-                    <Button variant="warning" size="sm" className="me-2" onClick={() => openEditModal(mat)}>Uredi</Button>
-                    <Button variant="danger" size="sm" onClick={() => {
-                      setDeleteId(mat.ID_material);
-                      setShowDeleteConfirm(true);
-                    }}>
-                      Obriši
-                    </Button>
-                  </td>
+                <td style={{ whiteSpace: 'nowrap' }}>
+                  <Button variant="warning" size="sm" className="me-2" onClick={() => openEditModal(mat)}>Uredi</Button>
+                  <Button variant="danger" size="sm" onClick={() => {
+                    setDeleteId(mat.ID_material);
+                    setShowDeleteConfirm(true);
+                  }}>
+                    Obriši
+                  </Button>
+                </td>
               </tr>
             ))}
           </tbody>

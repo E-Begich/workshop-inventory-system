@@ -116,7 +116,7 @@ const ShowOffer = () => {
             fetchOffers();
         } catch (error) {
             console.error('Greška pri brisanju:', error);
-            toast.error('Brisanje nije uspjelo.');
+            toast.error('Brisanje ponude nije uspjelo.');
         } finally {
             setShowDeleteConfirm(false);
             setDeleteId(null);
@@ -175,14 +175,12 @@ const ShowOffer = () => {
         setSortConfig({ key, direction });
     };
 
-
-
     return (
         <div className="container px-3 mt-4">
             {/* Naslov i gumb */}
             <div className="row align-items-center mb-3">
                 <div className="col-12 col-md">
-                    <h2 className="mb-0">Materijali</h2>
+                    <h2 className="mb-0">Prikaz svih ponuda</h2>
                 </div>
                 <div className="col-12 col-md-auto mt-2 mt-md-0 text-md-end">
                     <Button variant="danger" style={{ whiteSpace: 'nowrap' }}>
@@ -241,10 +239,10 @@ const ShowOffer = () => {
                                     <td>{Number(offer.PriceTax).toFixed(2)} €</td>
                                     <td>{getUserName(offer.ID_user)}</td>
                                     <td style={{ whiteSpace: 'nowrap' }}>
-                                        <Button variant="warning" size="sm" className="me-2" >Otvori</Button>
-                                        <Button variant="danger" size="sm" className="me-2" onClick={() => openCreateReceiptModal(offer)}> Kreiraj račun </Button>
+                                        <Button variant="secondary" size="sm" className="me-2" >Otvori</Button>
+                                        <Button variant="warning" size="sm" className="me-2" onClick={() => openCreateReceiptModal(offer)}> Kreiraj račun </Button>
                                         <Button variant="danger" size="sm" className="me-2"> Izvezi PDF </Button>
-                                        <Button variant="danger" size="sm" className="me-2" onClick={() => confirmDeleteOffer(offer.ID_offer)}>Obriši</Button>
+                                        <Button variant="danger" size="sm" className="me-2" onClick={() => confirmDeleteOffer(offer.ID_offer)}> X </Button>
                                     </td>
                                 </tr>
                             ))}
@@ -255,7 +253,7 @@ const ShowOffer = () => {
             {/* PAGINATION */}
             <div className="row align-items-center mt-3 px-2">
                 <div className="col-12 col-md-6 mb-2 mb-md-0">
-                    Prikazuje se {filteredOffers.length === 0 ? 0 : indexOfFirst + 1} - {Math.min(indexOfLast, filteredOffers.length)} od {filteredOffers.length} dobavljača
+                    Prikazuje se {filteredOffers.length === 0 ? 0 : indexOfFirst + 1} - {Math.min(indexOfLast, filteredOffers.length)} od {filteredOffers.length} ponuda
                 </div>
                 <div className="col-12 col-md-6 text-md-end">
                     <Button
@@ -317,7 +315,7 @@ const ShowOffer = () => {
                     <Button variant="secondary" onClick={() => setShowModal(false)}>
                         Odustani
                     </Button>
-                    <Button variant="primary" onClick={handleCreateReceipt} disabled={!paymentMethod}>
+                    <Button variant="danger" onClick={handleCreateReceipt} disabled={!paymentMethod}>
                         Potvrdi
                     </Button>
                 </Modal.Footer>

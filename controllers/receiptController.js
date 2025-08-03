@@ -91,33 +91,11 @@ const createReceiptFromOffer = async (req, res) => {
   const { ID_offer, ID_user, PaymentMethod } = req.body;
   const currentYear = new Date().getFullYear();
 
-  // Nađi posljednji račun iz te godine
-  const latestReceipt = await Receipt.findOne({
-    where: db.sequelize.where(
-      db.sequelize.fn('YEAR', db.sequelize.col('DateCreate')),
-      currentYear
-    ),
-    order: [['ID_receipt', 'DESC']]
-  });
-
-  let nextNumber = 1;
-  if (latestReceipt && latestReceipt.ReceiptNumber) {
-    const lastNumber = parseInt(latestReceipt.ReceiptNumber.split('-')[2]);
-    nextNumber = lastNumber + 1;
-  }
-
-  const receiptNumber = `R-${currentYear}-${String(nextNumber).padStart(5, '0')}`;
-
   try {
     // 1. Pronađi ponudu
     const offer = await Offer.findOne({
       where: { ID_offer },
-      include: [
-        {
-          model: OfferItems,
-          as: 'OfferItems'
-        }
-      ]
+      include: [{ model: OfferItems, as: 'OfferItems' }],
     });
 
     if (!offer) {
@@ -129,7 +107,35 @@ const createReceiptFromOffer = async (req, res) => {
     const priceTax = offer.OfferItems.reduce((sum, item) => sum + parseFloat(item.PriceTax), 0);
     const tax = priceTax - priceNoTax;
 
-    // 4. Kreiraj Receipt
+    // 3. Generiraj broj računa
+    const latestReceipt = await Receipt.findOne({
+      where: db.sequelize.where(
+        db.sequelize.fn('YEAR', db.sequelize.col('DateCreate')),
+        currentYear
+      ),
+      order: [['ID_receipt', 'DESC']],
+    });
+
+    let nextNumber = 1;
+    if (latestReceipt && latestReceipt.ReceiptNumber) {
+      const lastNumber = parseInt(latestReceipt.ReceiptNumber.split('-')[2]);
+      nextNumber = lastNumber + 1;
+    }
+
+    const receiptNumber = `R-${currentYear}-${String(nextNumber).padStart(5, '0')}`;
+
+    // 4. Pripremi stavke
+    const receiptItems = offer.OfferItems.map(item => ({
+      TypeItem: item.TypeItem,
+      ID_material: item.ID_material,
+      ID_service: item.ID_service,
+      Amount: item.Amount,
+      PriceNoTax: item.PriceNoTax,
+      Tax: item.Tax,
+      PriceTax: item.PriceTax,
+    }));
+
+    // 5. Kreiraj račun
     const receipt = await Receipt.create({
       ReceiptNumber: receiptNumber,
       ID_client: offer.ID_client,
@@ -137,13 +143,13 @@ const createReceiptFromOffer = async (req, res) => {
       PriceNoTax: priceNoTax,
       Tax: tax,
       PriceTax: priceTax,
-      ID_offer: ID_offer,
-      ID_user: ID_user,
-      PaymentMethod: PaymentMethod
+      ID_offer,
+      ID_user,
+      PaymentMethod
     });
 
-    // 5. Kreiraj stavke (ReceiptItems)
-    for (const item of offer.OfferItems) {
+    // 6. Dodaj stavke i ažuriraj skladište
+    for (const item of receiptItems) {
       await ReceiptItems.create({
         ID_receipt: receipt.ID_receipt,
         TypeItem: item.TypeItem,
@@ -152,14 +158,22 @@ const createReceiptFromOffer = async (req, res) => {
         Amount: item.Amount,
         PriceNoTax: item.PriceNoTax,
         Tax: item.Tax,
-        PriceTax: item.PriceTax
+        PriceTax: item.PriceTax,
       });
+
+      if (item.TypeItem === 'Materijal' && item.ID_material) {
+        const material = await Materials.findByPk(item.ID_material);
+        if (material) {
+          material.Amount -= item.Amount;
+          await material.save();
+        }
+      }
     }
 
-    return res.status(201).json({ message: 'Račun uspješno kreiran iz ponude', receipt });
+    res.status(201).json(receipt);
   } catch (error) {
-    console.error('Greška prilikom kreiranja računa:', error);
-    return res.status(500).json({ error: 'Greška na serveru' });
+    console.error('Greška prilikom kreiranja računa iz ponude:', error);
+    res.status(500).json({ error: 'Greška na serveru' });
   }
 };
 

@@ -15,10 +15,26 @@ const WarehouseChange = db.WarehouseChange
 //1. create receipt
 const addReceipt = async (req, res) => {
   try {
-    const receiptNumber = `R-${Date.now()}`; // generiraj broj
+    const currentYear = new Date().getFullYear();
+
+    const latestReceipt = await Receipt.findOne({
+      where: db.sequelize.where(
+        db.sequelize.fn('YEAR', db.sequelize.col('DateCreate')),
+        currentYear
+      ),
+      order: [['ID_receipt', 'DESC']]
+    });
+
+    let nextNumber = 1;
+    if (latestReceipt && latestReceipt.ReceiptNumber) {
+      const lastNumber = parseInt(latestReceipt.ReceiptNumber.split('-')[2]);
+      nextNumber = lastNumber + 1;
+    }
+
+    const receiptNumber = `R-${currentYear}-${String(nextNumber).padStart(5, '0')}`;
 
     let info = {
-      ReceiptNumber: receiptNumber, // ✅ dodaj ovdje
+      ReceiptNumber: receiptNumber,
       ID_client: req.body.ID_client,
       DateCreate: req.body.DateCreate,
       PriceNoTax: req.body.PriceNoTax,
@@ -29,7 +45,7 @@ const addReceipt = async (req, res) => {
       PaymentMethod: req.body.PaymentMethod
     };
 
-    console.log("Finalni receipt info:", info); // za provjeru
+    console.log("Finalni receipt info:", info);
 
     const receipt = await db.Receipt.create(info);
 
@@ -72,7 +88,7 @@ const deleteReceipt = async (req, res) => {
 
 // 6. Create receipt from offer
 const createReceiptFromOffer = async (req, res) => {
-  const { ID_offer, ID_user, PaymentMethod  } = req.body;
+  const { ID_offer, ID_user, PaymentMethod } = req.body;
   const currentYear = new Date().getFullYear();
 
   // Nađi posljednji račun iz te godine

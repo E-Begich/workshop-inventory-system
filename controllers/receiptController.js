@@ -42,37 +42,55 @@ const addReceipt = async (req, res) => {
 
 
 // 2. Gets all users from table
-const getAllReceipt= async (req, res) => {
-    let receipt = await Receipt.findAll({})
-    res.send(receipt)
+const getAllReceipt = async (req, res) => {
+  let receipt = await Receipt.findAll({})
+  res.send(receipt)
 }
 
 //3. Get one user over id
-const getOneReceipt= async (req, res) => {
+const getOneReceipt = async (req, res) => {
 
-    let ID_receipt = req.params.ID_receipt
-    let receipt = await Receipt.findOne({ where: { ID_receipt: ID_receipt}})
-    res.status(200).send(receipt)
+  let ID_receipt = req.params.ID_receipt
+  let receipt = await Receipt.findOne({ where: { ID_receipt: ID_receipt } })
+  res.status(200).send(receipt)
 }
 
 //4. update user over id
 const updateReceipt = async (req, res) => {
-    let ID_receipt = req.params.ID_receipt
-    const receipt = await Receipt.update(req.body, {where: { ID_receipt: ID_receipt }})
-    res.status(200).send(receipt)
+  let ID_receipt = req.params.ID_receipt
+  const receipt = await Receipt.update(req.body, { where: { ID_receipt: ID_receipt } })
+  res.status(200).send(receipt)
 }
 
 //5. delete user by id
 const deleteReceipt = async (req, res) => {
 
-    let ID_receipt = req.params.ID_receipt
-    await Receipt.destroy({where: { ID_receipt: ID_receipt }})
-    res.send('Račun je obrisan!')
+  let ID_receipt = req.params.ID_receipt
+  await Receipt.destroy({ where: { ID_receipt: ID_receipt } })
+  res.send('Račun je obrisan!')
 }
 
 // 6. Create receipt from offer
 const createReceiptFromOffer = async (req, res) => {
-  const { ID_offer, ID_user } = req.body;
+  const { ID_offer, ID_user, PaymentMethod  } = req.body;
+  const currentYear = new Date().getFullYear();
+
+  // Nađi posljednji račun iz te godine
+  const latestReceipt = await Receipt.findOne({
+    where: db.sequelize.where(
+      db.sequelize.fn('YEAR', db.sequelize.col('DateCreate')),
+      currentYear
+    ),
+    order: [['ID_receipt', 'DESC']]
+  });
+
+  let nextNumber = 1;
+  if (latestReceipt && latestReceipt.ReceiptNumber) {
+    const lastNumber = parseInt(latestReceipt.ReceiptNumber.split('-')[2]);
+    nextNumber = lastNumber + 1;
+  }
+
+  const receiptNumber = `R-${currentYear}-${String(nextNumber).padStart(5, '0')}`;
 
   try {
     // 1. Pronađi ponudu
@@ -137,11 +155,11 @@ const getPaymentEnum = (req, res) => {
 
 
 module.exports = {
-    addReceipt,
-    getAllReceipt,
-    getOneReceipt,
-    updateReceipt,
-    deleteReceipt,
-    createReceiptFromOffer,
-    getPaymentEnum,
+  addReceipt,
+  getAllReceipt,
+  getOneReceipt,
+  updateReceipt,
+  deleteReceipt,
+  createReceiptFromOffer,
+  getPaymentEnum,
 }

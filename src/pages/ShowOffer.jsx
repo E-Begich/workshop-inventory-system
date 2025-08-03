@@ -13,6 +13,13 @@ const ShowOffer = () => {
     const [searchUser, setSearchUser] = useState('');
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false); //za modal za brisanje
     const [deleteId, setDeleteId] = useState(null);//za modal za brisanje
+    const [selectedOffer, setSelectedOffer] = useState(null); //odabir ponude za odabir plaćanja
+    const [showModal, setShowModal] = useState(false); //postavljanje načina plaćanja
+    const [paymentMethod, setPaymentMethod] = useState('');
+
+    const [typeEnum, setTypeEnum] = useState([]);
+
+    const [payment, setPayment] = useState([]);
     const [sortConfig, setSortConfig] = useState({ key: '', direction: '' });
     const [currentPage, setCurrentPage] = useState(1);
     const offersPerPage = 30;
@@ -22,6 +29,7 @@ const ShowOffer = () => {
         fetchOffers();
         fetchClients();
         fetchUsers();
+        fetchPayment();
     }, []);
 
 
@@ -70,6 +78,15 @@ const ShowOffer = () => {
         return user ? user.Name : 'Nepoznat';
     };
 
+    const fetchPayment = async () => {
+        try {
+            const res = await axios.get('/api/aplication/getPaymentEnum');
+            setPayment(res.data);
+        } catch (error) {
+            console.error('Greška pri dohvaćanju načina plaćanja', error);
+        }
+    };
+
     //postavljanje datuma u dd.mm.yy
     const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -78,6 +95,13 @@ const ShowOffer = () => {
         const year = date.getFullYear();     // yy (zadnje 2 znamenke godine)
         return `${day}.${month}.${year}`;
     };
+
+    const openCreateReceiptModal = (offer) => {
+        setSelectedOffer(offer);
+        setPaymentMethod('');  // Resetiraj, neka nema odabira na početku
+        setShowModal(true);
+    };
+
 
 
     const confirmDeleteOffer = (id) => {
@@ -98,6 +122,25 @@ const ShowOffer = () => {
             setDeleteId(null);
         }
     };
+
+    const handleCreateReceipt = async () => {
+            console.log("Odabrani način plaćanja:", paymentMethod);  // provjeri vrijednost
+        try {
+            await axios.post('/api/aplication/createReceiptFromOffer', {
+                ID_offer: selectedOffer.ID_offer,
+                ID_user: selectedOffer.ID_user, // ako uzimaš iz ponude
+                PaymentMethod: paymentMethod
+            });
+            toast.success("Račun uspješno kreiran.");
+            setShowModal(false);
+            setPaymentMethod(''); // resetira odabir
+        } catch (error) {
+            console.error("Greška prilikom kreiranja računa:", error);
+            toast.error("Greška prilikom kreiranja računa.");
+        }
+    };
+
+
 
     const filteredOffers = offers.filter((offer) => {
         const clientName = getClientName(offer.ID_client).toLowerCase();
@@ -170,7 +213,7 @@ const ShowOffer = () => {
                     </InputGroup>
                 </div>
             </div>
-            {offers.length === 0 ? (
+            {currentOffers.length === 0 ? (
                 <p>Nema ponuda.</p>
             ) : (
                 <div className="table-responsive">
@@ -199,6 +242,7 @@ const ShowOffer = () => {
                                     <td>{getUserName(offer.ID_user)}</td>
                                     <td style={{ whiteSpace: 'nowrap' }}>
                                         <Button variant="warning" size="sm" className="me-2" >Otvori</Button>
+                                        <Button variant="danger" size="sm" className="me-2" onClick={() => openCreateReceiptModal(offer)}> Kreiraj račun </Button>
                                         <Button variant="danger" size="sm" className="me-2"> Izvezi PDF </Button>
                                         <Button variant="danger" size="sm" className="me-2" onClick={() => confirmDeleteOffer(offer.ID_offer)}>Obriši</Button>
                                     </td>
@@ -246,6 +290,39 @@ const ShowOffer = () => {
                     <Button variant="danger" onClick={handleDelete}>Obriši</Button>
                 </Modal.Footer>
             </Modal>
+
+            {/* MODAL ZA dodavanje plaćanja */}
+            <Modal show={showModal} onHide={() => setShowModal(false)}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Odaberi način plaćanja</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form.Group>
+                        <Form.Label>Način plaćanja</Form.Label>
+                        <Form.Control
+                            as="select"
+                            value={paymentMethod}
+                            onChange={(e) => setPaymentMethod(e.target.value)}
+                        >
+                            <option value="">Odaberi način plaćanja</option>
+                            {payment.map((method) => (
+                                <option key={method} value={method}>
+                                    {method}
+                                </option>
+                            ))}
+                        </Form.Control>
+                    </Form.Group>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowModal(false)}>
+                        Odustani
+                    </Button>
+                    <Button variant="primary" onClick={handleCreateReceipt} disabled={!paymentMethod}>
+                        Potvrdi
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
 
             <ToastContainer position="top-right" autoClose={3000} hideProgressBar newestOnTop />
 

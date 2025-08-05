@@ -175,6 +175,8 @@ const ShowOffer = () => {
         setSortConfig({ key, direction });
     };
 
+    const apiUrl = process.env.REACT_APP_API_URL;
+
     return (
         <div className="container px-3 mt-4">
             {/* Naslov i gumb */}
@@ -241,7 +243,7 @@ const ShowOffer = () => {
                                     <td style={{ whiteSpace: 'nowrap' }}>
                                         <Button variant="secondary" size="sm" className="me-2" >Otvori</Button>
                                         <Button variant="warning" size="sm" className="me-2" onClick={() => openCreateReceiptModal(offer)}> Kreiraj račun </Button>
-                                        <Button variant="danger" size="sm" className="me-2"> Izvezi PDF </Button>
+                                        <Button variant="danger" size="sm" className="me-2"   onClick={() => window.open(`${apiUrl}/api/aplication/generateOfferPDF/${offer.ID_offer}`, '_blank')}> Izvezi PDF </Button>
                                         <Button variant="danger" size="sm" className="me-2" onClick={() => confirmDeleteOffer(offer.ID_offer)}> X </Button>
                                     </td>
                                 </tr>

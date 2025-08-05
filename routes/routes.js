@@ -48,6 +48,8 @@ router.get('/getOneOffer/:ID_offer', offerController.getOneOffer);
 router.put('/updateOffer/:ID_offer', offerController.updateOffer);
 router.delete('/deleteOffer/:ID_offer', offerController.deleteOffer);
 
+router.get('/generateOfferPDF/:ID_offer', offerController.generateOfferPDF);
+
 // Table OfferItems
 router.post('/addOfferItems', offerItemsController.addOfferItems);
 router.get('/getAllOfferItems', offerItemsController.getAllOfferItems);

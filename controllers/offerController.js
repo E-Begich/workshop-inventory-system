@@ -67,6 +67,8 @@ const fs = require('fs');
 const path = require('path');
 const formatCurrency = (value) => `${parseFloat(value || 0).toFixed(2)} €`;
 
+// Kreiraj dokument
+const doc = new PDFDocument();
 
 const generateOfferPDF = async (req, res) => {
     const { ID_offer } = req.params;
@@ -87,6 +89,11 @@ const generateOfferPDF = async (req, res) => {
 
         // Kreiraj novi PDF dokument
         const doc = new PDFDocument({ margin: 50 });
+
+        const fontPath = path.join(__dirname, '..', 'fonts', 'DejaVuSans.ttf');
+        doc.registerFont('DejaVu', fontPath);
+        doc.font('DejaVu');
+
         const filename = `Ponuda_${offer.ID_offer}.pdf`;
 
         // Setuj response
@@ -134,69 +141,111 @@ const generateOfferPDF = async (req, res) => {
         // === Tablica stavki ===
 
         const tableTop = 300;
-        const itemSpacing = 20;
+        const itemSpacing = 15;
+        const rowSpacing = 15;
 
-        const headers = ['Naziv artikla', 'Tip', 'Količina', 'Jedinica', 'Cijena bez PDV-a', 'PDV', 'Cijena s PDV-om'];
+        const headers = [
+            'Naziv artikla',
+            'Vrsta',
+            'Jedinica',
+            'Količina',
+            'Jedinična cijena bez PDV',
+            'PDV (%)',
+            'Iznos PDV-a',
+            'Iznos s PDV'
+        ];
         const startX = 50;
-        const colWidths = [120, 70, 60, 60, 50, 150];
+        const colWidths = [100, 60, 60, 60, 60, 60, 70, 60];
 
         // Zaglavlje tablice
         headers.forEach((header, i) => {
-            doc.font('Helvetica-Bold').text(header, startX + colWidths.slice(0, i).reduce((a, b) => a + b, 0), tableTop);
+            doc.font('DejaVu').fontSize(10).text(header, startX + colWidths.slice(0, i).reduce((a, b) => a + b, 0), tableTop, {
+                width: colWidths[i],
+                align: 'left',
+                ellipsis: true,
+                // Ako želiš da dugi tekst u zaglavlju bude u dva reda:
+                lineGap: 2,
+            });
         });
 
         // Povuci liniju ispod zaglavlja
-        doc.moveTo(startX, tableTop + 15)
-            .lineTo(startX + colWidths.reduce((a, b) => a + b, 0), tableTop + 15)
+        doc.moveTo(startX, tableTop + 40) // pomaknuto malo niže
+            .lineTo(startX + colWidths.reduce((a, b) => a + b, 0), tableTop + 40)
             .strokeColor('#aaaaaa')
             .lineWidth(1)
             .stroke();
 
         // Podaci u tablici
-        let rowY = tableTop + 25;
+        let rowY = tableTop + 45;
 
         for (const item of offer.OfferItems) {
             let naziv = '';
             if (item.TypeItem === 'Materijal' && item.ID_material) {
                 const mat = await Materials.findByPk(item.ID_material);
-                naziv = mat?.NameMaterial || 'Nepoznat materijal';
+                naziv = mat?.NameMaterial || 'Unknown material';
             } else if (item.TypeItem === 'Usluga' && item.ID_service) {
-                console.log('ID_service:', item.ID_service);
                 const serv = await Service.findByPk(item.ID_service);
-                naziv = serv?.NameService || 'Nepoznata usluga';
+                naziv = serv?.Name || 'Unknown service';
             }
+
+            const unit = item.TypeItem === 'Materijal' ? 'M' : 'Svc';
+
+            const unitPriceNoTax = item.PriceNoTax;
+            const unitPriceWithTax = item.PriceTax;
+            const pdvPercent = item.Tax; // expected to be something like 25
+            const pdvAmount = (unitPriceWithTax - unitPriceNoTax) ;
 
             const row = [
                 naziv,
                 item.TypeItem,
+                unit,
                 item.Amount,
-                formatCurrency(item.PriceNoTax),
-                formatCurrency(item.Tax),
-                formatCurrency(item.PriceTax),
+                formatCurrency(unitPriceNoTax),
+                `${pdvPercent} %`,
+                formatCurrency(pdvAmount),
+                formatCurrency(unitPriceWithTax),
             ];
 
             row.forEach((text, i) => {
-                doc.font('Helvetica').text(text, startX + colWidths.slice(0, i).reduce((a, b) => a + b, 0), rowY);
+                doc
+                    .font('DejaVu')
+                    .fontSize(10)
+                    .text(text, startX + colWidths.slice(0, i).reduce((a, b) => a + b, 0), rowY, {
+                        width: colWidths[i],
+                        align: 'left',
+                    });
             });
 
-            rowY += itemSpacing;
+            rowY += rowSpacing; // make sure rowSpacing is defined above, e.g. const rowSpacing = 15;
         }
 
         // === Sažetak cijena ===
-        doc.moveDown(2);
+        doc.moveDown(5);
+
+        const rightAlignX = 350;
+
         doc
             .fontSize(12)
-            .text(`Ukupno bez PDV-a: ${formatCurrency(offer.PriceNoTax)}`, { align: 'right' })
-            .text(`PDV: ${formatCurrency(offer.Tax)}`, { align: 'right' })
-            .text(`Ukupno s PDV-om: ${formatCurrency(offer.PriceTax)}`, { align: 'right' })
+            .text(`Ukupno bez PDV-a:     ${formatCurrency(parseFloat(offer.PriceNoTax))}`, rightAlignX)
+            .moveDown(0.2)
+            .text(`Iznos PDV-a:                  ${parseFloat(offer.Tax).toFixed(2)} €`, rightAlignX)
+            .moveDown(0.2)
+            .text(`Ukupno s PDV-om:      ${formatCurrency(parseFloat(offer.PriceTax))}`, rightAlignX);
+
+
 
         doc.moveDown(3);
 
         // === Potpis ===
+        const leftAlignX = 50;
+
+        doc.moveDown(2);
+
         doc
-            .text('______________________', { align: 'right' })
-            .text(`${offer.User?.Name || ''}`, { align: 'right' })
-            .text(`${formatDate(new Date())}`, { align: 'right' });
+            .font('DejaVu') // <-- ovo dodaj
+            .text('______________________', leftAlignX)
+            .text(`${offer.User?.Name || ''} ${offer.User?.Lastname || ''}`, leftAlignX)
+            .text(`${formatDate(new Date())}`, leftAlignX);
 
         doc.end();
 

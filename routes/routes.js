@@ -49,6 +49,7 @@ router.put('/updateOffer/:ID_offer', offerController.updateOffer);
 router.delete('/deleteOffer/:ID_offer', offerController.deleteOffer);
 
 router.get('/generateOfferPDF/:ID_offer', offerController.generateOfferPDF);
+router.get('/getOfferWithDetails/:ID_offer', offerController.getOfferWithDetails);
 
 // Table OfferItems
 router.post('/addOfferItems', offerItemsController.addOfferItems);

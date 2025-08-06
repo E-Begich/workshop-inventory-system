@@ -19,6 +19,10 @@ const ShowOffer = () => {
 
     const [typeEnum, setTypeEnum] = useState([]);
 
+    const [detailsModalVisible, setDetailsModalVisible] = useState(false); //za otvaranje modala za pregled ponude
+    const [detailedOffer, setDetailedOffer] = useState(null);
+
+
     const [payment, setPayment] = useState([]);
     const [sortConfig, setSortConfig] = useState({ key: '', direction: '' });
     const [currentPage, setCurrentPage] = useState(1);
@@ -124,7 +128,7 @@ const ShowOffer = () => {
     };
 
     const handleCreateReceipt = async () => {
-            console.log("Odabrani način plaćanja:", paymentMethod);  // provjeri vrijednost
+        console.log("Odabrani način plaćanja:", paymentMethod);  // provjeri vrijednost
         try {
             await axios.post('/api/aplication/createReceiptFromOffer', {
                 ID_offer: selectedOffer.ID_offer,
@@ -140,7 +144,16 @@ const ShowOffer = () => {
         }
     };
 
-
+const openDetailsModal = async (id) => {
+    try {
+        const res = await axios.get(`/api/aplication/getOfferWithDetails/${id}`);
+        setDetailedOffer(res.data);
+        setDetailsModalVisible(true);
+    } catch (error) {
+        console.error('Greška pri dohvaćanju detalja ponude:', error);
+        toast.error('Ne mogu dohvatiti detalje ponude.');
+    }
+};
 
     const filteredOffers = offers.filter((offer) => {
         const clientName = getClientName(offer.ID_client).toLowerCase();
@@ -241,9 +254,9 @@ const ShowOffer = () => {
                                     <td>{Number(offer.PriceTax).toFixed(2)} €</td>
                                     <td>{getUserName(offer.ID_user)}</td>
                                     <td style={{ whiteSpace: 'nowrap' }}>
-                                        <Button variant="secondary" size="sm" className="me-2" >Otvori</Button>
+                                        <Button variant="secondary" size="sm" className="me-2" onClick={() => openDetailsModal(offer.ID_offer)}> Otvori </Button>
                                         <Button variant="warning" size="sm" className="me-2" onClick={() => openCreateReceiptModal(offer)}> Kreiraj račun </Button>
-                                        <Button variant="danger" size="sm" className="me-2"   onClick={() => window.open(`${apiUrl}/api/aplication/generateOfferPDF/${offer.ID_offer}`, '_blank')}> Izvezi PDF </Button>
+                                        <Button variant="danger" size="sm" className="me-2" onClick={() => window.open(`${apiUrl}/api/aplication/generateOfferPDF/${offer.ID_offer}`, '_blank')}> Izvezi PDF </Button>
                                         <Button variant="danger" size="sm" className="me-2" onClick={() => confirmDeleteOffer(offer.ID_offer)}> X </Button>
                                     </td>
                                 </tr>
@@ -322,6 +335,75 @@ const ShowOffer = () => {
                     </Button>
                 </Modal.Footer>
             </Modal>
+
+            <Modal
+                show={detailsModalVisible}
+                onHide={() => setDetailsModalVisible(false)}
+                size="lg"
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>Detalji ponude</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {!detailedOffer ? (
+                        <p>Učitavanje...</p>
+                    ) : (
+                        <>
+                            <p><strong>Broj ponude:</strong> R-{new Date(detailedOffer.DateCreate).getFullYear()}-{String(detailedOffer.ID_offer).padStart(5, '0')}</p>
+                            <p><strong>Datum izrade:</strong> {formatDate(detailedOffer.DateCreate)}</p>
+                            <p><strong>Datum isteka:</strong> {formatDate(detailedOffer.DateEnd)}</p>
+                            <hr />
+                            <p><strong>Klijent:</strong> {detailedOffer.Client?.TypeClient === 'Tvrtka' ? detailedOffer.Client?.Name : detailedOffer.Client?.ContactName}</p>
+                            <p><strong>Email:</strong> {detailedOffer.Client?.Email}</p>
+                            <hr />
+                            <Table striped bordered hover size="sm">
+                                <thead>
+                                    <tr>
+                                        <th>Naziv</th>
+                                        <th>Vrsta</th>
+                                        <th>Količina</th>
+                                        <th>Jed. cijena bez PDV</th>
+                                        <th>PDV %</th>
+                                        <th>Iznos s PDV</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {detailedOffer.OfferItems.map((item, index) => (
+                                        <tr key={index}>
+                                            <td>{item.TypeItem}</td>
+                                            <td>{item.TypeItem}</td>
+                                            <td>{item.Amount}</td>
+                                            <td>{Number(item.PriceNoTax).toFixed(2)} €</td>
+                                            <td>{item.Tax} %</td>
+                                            <td>{Number(item.PriceTax).toFixed(2)} €</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </Table>
+                            <hr />
+                            <p><strong>Ukupno bez PDV-a:</strong> {Number(detailedOffer.PriceNoTax).toFixed(2)} €</p>
+                            <p><strong>PDV:</strong> {Number(detailedOffer.Tax).toFixed(2)} €</p>
+                            <p><strong>Ukupno s PDV-om:</strong> {Number(detailedOffer.PriceTax).toFixed(2)} €</p>
+                        </>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    {detailedOffer && (
+                        <Button
+                            variant="danger"
+                            onClick={() =>
+                                window.open(`${apiUrl}/api/aplication/generateOfferPDF/${detailedOffer.ID_offer}`, '_blank')
+                            }
+                        >
+                            📄 Preuzmi PDF
+                        </Button>
+                    )}
+                    <Button variant="secondary" onClick={() => setDetailsModalVisible(false)}>
+                        Zatvori
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
 
 
             <ToastContainer position="top-right" autoClose={3000} hideProgressBar newestOnTop />

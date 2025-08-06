@@ -61,6 +61,28 @@ const deleteOffer = async (req, res) => {
     res.send('Ponuda je obrisana!')
 }
 
+const getOfferWithDetails = async (req, res) => {
+    let ID_offer = req.params.ID_offer;
+
+    try {
+        const offer = await Offer.findOne({
+            where: { ID_offer },
+            include: [
+                { model: OfferItems, as: 'OfferItems' },
+                { model: Client, as: 'Client' },
+                { model: User, as: 'User' },
+            ],
+        });
+
+        if (!offer) return res.status(404).send('Ponuda nije pronađena');
+        res.status(200).json(offer);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Greška na serveru');
+    }
+};
+
+
 //forma za kreiranje i izgled PDF dokumenta
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
@@ -263,5 +285,6 @@ module.exports = {
     getOneOffer,
     updateOffer,
     deleteOffer,
-    generateOfferPDF
+    generateOfferPDF,
+    getOfferWithDetails
 }

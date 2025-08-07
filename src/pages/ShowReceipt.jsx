@@ -151,11 +151,24 @@ const ShowReceipt = () => {
                     <Table striped bordered hover size="sm" className="mb-3">
                         <thead>
                             <tr>
-                                <th>Broj računa</th>
-                                <th>Klijent</th>
-                                <th>Datum</th>
-                                <th>Ukupno (s PDV)</th>
-                                <th>Korisnik</th>
+                                {[
+                                    { label: 'Broj računa', key: 'ID_receipt' },
+                                    { label: 'Klijent', key: 'Client.Name' },
+                                    { label: 'Datum', key: 'DateCreate' },
+                                    { label: 'Ukupno (s PDV)', key: 'PriceTax' },
+                                    { label: 'Korisnik', key: 'User.Name' },
+                                ].map(({ label, key }) => (
+                                    <th key={key} onClick={() => handleSort(key)} style={{ cursor: 'pointer' }}>
+                                        {label}{' '}
+                                        <span style={{ color: sortConfig.key === key ? 'black' : '#ccc' }}>
+                                            {sortConfig.key === key
+                                                ? sortConfig.direction === 'asc'
+                                                    ? '▲'
+                                                    : '▼'
+                                                : '▲▼'}
+                                        </span>
+                                    </th>
+                                ))}
                                 <th></th>
                             </tr>
                         </thead>

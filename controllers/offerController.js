@@ -25,6 +25,7 @@ const addOffer = async (req, res) => {
         Tax: req.body.Tax,
         PriceTax: req.body.PriceTax,
         ID_user: req.body.ID_user,
+        HasReceipt: req.body.HasReceipt,
     }
 
     const offer = await Offer.create(info)

@@ -13,13 +13,14 @@ const ShowOffer = () => {
     const [searchUser, setSearchUser] = useState('');
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false); //za modal za brisanje
     const [deleteId, setDeleteId] = useState(null);//za modal za brisanje
-    const [selectedOffer, setSelectedOffer] = useState(null); //odabir ponude za odabir plaćanja
+    const [selectedOffer] = useState(null); //odabir ponude za odabir plaćanja
     const [showModal, setShowModal] = useState(false); //postavljanje načina plaćanja
     const [paymentMethod, setPaymentMethod] = useState('');
 
     const [detailsModalVisible, setDetailsModalVisible] = useState(false); //za otvaranje modala za pregled ponude
     const [detailedOffer, setDetailedOffer] = useState(null);
 
+    const [, setIsCreatingReceipt] = useState(false);
 
     const [payment, setPayment] = useState([]);
     const [sortConfig, setSortConfig] = useState({ key: '', direction: '' });
@@ -98,14 +99,6 @@ const ShowOffer = () => {
         return `${day}.${month}.${year}`;
     };
 
-    const openCreateReceiptModal = (offer) => {
-        setSelectedOffer(offer);
-        setPaymentMethod('');  // Resetiraj, neka nema odabira na početku
-        setShowModal(true);
-    };
-
-
-
     const confirmDeleteOffer = (id) => {
         setDeleteId(id);
         setShowDeleteConfirm(true);
@@ -126,7 +119,8 @@ const ShowOffer = () => {
     };
 
     const handleCreateReceipt = async () => {
-        console.log("Odabrani način plaćanja:", paymentMethod);  // provjeri vrijednost
+        //console.log("Odabrani način plaćanja:", paymentMethod);  // provjeri vrijednost
+        setIsCreatingReceipt(true);
         try {
             await axios.post('/api/aplication/createReceiptFromOffer', {
                 ID_offer: selectedOffer.ID_offer,
@@ -136,22 +130,25 @@ const ShowOffer = () => {
             toast.success("Račun uspješno kreiran.");
             setShowModal(false);
             setPaymentMethod(''); // resetira odabir
+            fetchOffers(); // refresha podatke da osvježiš HasReceipt
         } catch (error) {
-            console.error("Greška prilikom kreiranja računa:", error);
+            //  console.error("Greška prilikom kreiranja računa:", error);
             toast.error("Greška prilikom kreiranja računa.");
+        } finally {
+            setIsCreatingReceipt(false);
         }
     };
 
-const openDetailsModal = async (id) => {
-    try {
-        const res = await axios.get(`/api/aplication/getOfferWithDetails/${id}`);
-        setDetailedOffer(res.data);
-        setDetailsModalVisible(true);
-    } catch (error) {
-        console.error('Greška pri dohvaćanju detalja ponude:', error);
-        toast.error('Ne mogu dohvatiti detalje ponude.');
-    }
-};
+    const openDetailsModal = async (id) => {
+        try {
+            const res = await axios.get(`/api/aplication/getOfferWithDetails/${id}`);
+            setDetailedOffer(res.data);
+            setDetailsModalVisible(true);
+        } catch (error) {
+            console.error('Greška pri dohvaćanju detalja ponude:', error);
+            toast.error('Ne mogu dohvatiti detalje ponude.');
+        }
+    };
 
     const filteredOffers = offers.filter((offer) => {
         const clientName = getClientName(offer.ID_client).toLowerCase();
@@ -231,13 +228,26 @@ const openDetailsModal = async (id) => {
                     <Table striped bordered hover size="sm" className="mb-3">
                         <thead>
                             <tr>
-                                <th>Broj ponude</th>
-                                <th>Vrsta klijenta</th>
-                                <th>Klijent</th>
-                                <th>Datum kreiranja</th>
-                                <th>Datum isteka</th>
-                                <th>Cijena (s PDV)</th>
-                                <th>Ponudu kreirao</th>
+                                {[
+                                    { label: 'Broj ponude', key: 'ID_offer' },
+                                    { label: 'Vrsta klijenta', key: 'Client.TypeClient' },
+                                    { label: 'Klijent', key: 'Client.Name' },
+                                    { label: 'Datum kreiranja', key: 'DateCreate' },
+                                    { label: 'Datum isteka', key: 'DateEnd' },
+                                    { label: 'Cijena (s PDV)', key: 'PriceTax' },
+                                    { label: 'Ponudu kreirao', key: 'User.Name' },
+                                ].map(({ label, key }) => (
+                                    <th key={key} onClick={() => handleSort(key)} style={{ cursor: 'pointer' }}>
+                                        {label}{' '}
+                                        <span style={{ color: sortConfig.key === key ? 'black' : '#ccc' }}>
+                                            {sortConfig.key === key
+                                                ? sortConfig.direction === 'asc'
+                                                    ? '▲'
+                                                    : '▼'
+                                                : '▲▼'}
+                                        </span>
+                                    </th>
+                                ))}
                                 <th></th>
                             </tr>
                         </thead>
@@ -253,7 +263,7 @@ const openDetailsModal = async (id) => {
                                     <td>{getUserName(offer.ID_user)}</td>
                                     <td style={{ whiteSpace: 'nowrap' }}>
                                         <Button variant="secondary" size="sm" className="me-2" onClick={() => openDetailsModal(offer.ID_offer)}> Otvori </Button>
-                                        <Button variant="warning" size="sm" className="me-2" onClick={() => openCreateReceiptModal(offer)}> Kreiraj račun </Button>
+                                        <Button variant="danger" size="sm" className="me-2" disabled={offer.HasReceipt} onClick={() => handleCreateReceipt(offer.ID_offer)}> {offer.HasReceipt ? 'Račun kreiran' : 'Kreiraj račun'}</Button>                          
                                         <Button variant="danger" size="sm" className="me-2" onClick={() => window.open(`${apiUrl}/api/aplication/generateOfferPDF/${offer.ID_offer}`, '_blank')}> Izvezi PDF </Button>
                                         <Button variant="danger" size="sm" className="me-2" onClick={() => confirmDeleteOffer(offer.ID_offer)}> X </Button>
                                     </td>

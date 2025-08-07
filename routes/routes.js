@@ -77,6 +77,9 @@ router.delete('/deleteReceipt/:ID_receipt', receiptController.deleteReceipt);
 
 router.post('/createReceiptFromOffer', receiptController.createReceiptFromOffer);
 router.get('/getPaymentEnum', receiptController.getPaymentEnum);
+router.get('/generateReceiptPDF/:ID_receipt', receiptController.generateReceiptPDF);
+router.get('/getReceiptWithDetails/:ID_receipt', receiptController.getReceiptWithDetails);
+
 
 
 //Table ReceiptItems

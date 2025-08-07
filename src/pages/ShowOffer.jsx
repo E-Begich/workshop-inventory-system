@@ -17,8 +17,6 @@ const ShowOffer = () => {
     const [showModal, setShowModal] = useState(false); //postavljanje načina plaćanja
     const [paymentMethod, setPaymentMethod] = useState('');
 
-    const [typeEnum, setTypeEnum] = useState([]);
-
     const [detailsModalVisible, setDetailsModalVisible] = useState(false); //za otvaranje modala za pregled ponude
     const [detailedOffer, setDetailedOffer] = useState(null);
 

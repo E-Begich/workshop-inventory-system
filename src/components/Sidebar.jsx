@@ -27,7 +27,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
         <ul className="nav nav-pills flex-column mb-auto">
           <li className="nav-item mb-2">
-            <Link to="/" className="nav-link text-white">
+            <Link to="/homePage" className="nav-link text-white">
               <i className="fas fa-tachometer-alt me-2" />
               Početna
             </Link>
@@ -112,7 +112,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                   </Link>
                 </li>
                 <li className="nav-item mb-1">
-                  <Link to="/invoices/history" className="nav-link text-white">
+                  <Link to="/showReceipt" className="nav-link text-white">
                     <i className="fas fa-receipt me-2" />
                     Povijest računa
                   </Link>

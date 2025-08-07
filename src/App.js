@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import HomePage from './pages/HomePage';
 import ShowMaterials from './pages/ShowMaterials';
 import ShowSupplier from './pages/ShowSupplier';
 import ShowUser from './pages/ShowUser';
@@ -7,7 +8,8 @@ import ShowService from './pages/ShowService';
 import CreateOffer from './pages/CreateOffer';
 import CreateReceipt from './pages/CreateReceipt';
 import ShowClient from './pages/ShowClient';
-import ShowOffer from './pages/ShowOffer'
+import ShowOffer from './pages/ShowOffer';
+import ShowReceipt from './pages/ShowReceipt';
 import Sidebar from "./components/Sidebar";
 import TopNavBar from "./components/TopNavBar";
 import Login from "./pages/Login";
@@ -28,7 +30,7 @@ const Layout = ({ sidebarOpen, toggleSidebar }) => {
         <TopNavBar />
         <div className="p-4" style={{ paddingTop: "80px" }}>
           <Routes>
-            <Route path="/" element={<ShowMaterials />} />
+            <Route path="/homePage" element={<HomePage />} />
             <Route path="/getAllMaterial" element={<ShowMaterials />} />
             <Route path="/getAllSupplier" element={<ShowSupplier />} />
             <Route path="/getAllUsers" element={<ShowUser />} />
@@ -37,6 +39,7 @@ const Layout = ({ sidebarOpen, toggleSidebar }) => {
             <Route path="/addOffer" element={<CreateOffer />} />
             <Route path="/addReceipt" element={<CreateReceipt />} />
             <Route path="/showOffer" element={<ShowOffer />} />
+            <Route path="/showReceipt" element={<ShowReceipt />} />
           </Routes>
         </div>
       </div>
